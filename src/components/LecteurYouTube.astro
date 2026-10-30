@@ -1,0 +1,160 @@
+---
+// Façade YouTube légère : vignette locale, puis iframe youtube-nocookie au clic.
+// Phase : P1 (étape b)
+//
+// Loi 25 : avant le clic, la page ne contacte AUCUN serveur de Google.
+// La vignette vient de src/assets/sorties/ (téléchargée une fois, voir le README).
+// Sans JavaScript, la façade est un simple lien vers la vidéo sur youtube.com.
+//
+// Îlot = élément personnalisé <lecteur-youtube> : le navigateur exécute
+// connectedCallback() pour chaque lecteur présent dans la page.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  /** ID YouTube (11 caractères). */
+  id: string;
+  /** Titre de la vidéo : nom accessible du bouton et titre de l'iframe. */
+  titre: string;
+  /** Vignette locale (src/assets/sorties/…). */
+  vignette: ImageMetadata;
+  /** true pour un lecteur visible dès l'arrivée sur la page (chargement prioritaire). */
+  prioritaire?: boolean;
+}
+
+const { id, titre, vignette, prioritaire = false } = Astro.props;
+const lienYouTube = `https://www.youtube.com/watch?v=${id}`;
+---
+
+<lecteur-youtube class="lecteur" data-id={id} data-titre={titre}>
+  <a class="facade" href={lienYouTube} data-facade>
+    <Image
+      src={vignette}
+      alt=""
+      widths={[640, 960, 1280]}
+      sizes="(min-width: 1240px) 800px, (min-width: 960px) 65vw, 100vw"
+      priority={prioritaire}
+    />
+    <span class="play" aria-hidden="true"></span>
+    <span class="sr">Lire la vidéo : {titre}</span>
+  </a>
+  {
+    Astro.slots.has('default') && (
+      <div class="meta">
+        <slot />
+      </div>
+    )
+  }
+</lecteur-youtube>
+
+<style>
+  .lecteur {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: radial-gradient(80% 90% at 30% 20%, var(--logo), var(--abysse) 70%);
+  }
+
+  .facade {
+    position: absolute;
+    inset: 0;
+    display: block;
+    cursor: pointer;
+    border-radius: inherit;
+  }
+  .facade img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .8;
+    transition: opacity .2s;
+  }
+  .facade:hover img,
+  .facade:focus-visible img { opacity: 1; }
+  .facade:focus-visible {
+    outline: 3px solid var(--glace);
+    outline-offset: -6px;
+  }
+
+  /* Bouton lecture : 76 px, triangle en CSS */
+  .play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 76px;
+    height: 76px;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(0, 158, 226, .95);
+    box-shadow: 0 0 0 10px rgba(0, 158, 226, .18);
+    transition: transform .2s;
+  }
+  .play::before {
+    content: "";
+    margin-left: 6px;
+    border-left: 22px solid var(--encre);
+    border-block: 13px solid transparent;
+  }
+  .facade:hover .play { transform: translate(-50%, -50%) scale(1.06); }
+
+  /* Ligne de métadonnées (slot) par-dessus la vignette */
+  .meta {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    padding: 18px;
+    background: linear-gradient(0deg, rgba(4, 10, 20, .95), transparent);
+    pointer-events: none; /* le clic traverse vers la façade */
+  }
+
+  /* Pendant la lecture : l'iframe prend toute la place */
+  .lecteur :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .lecteur.joue .meta { display: none; }
+</style>
+
+<script>
+  class LecteurYouTube extends HTMLElement {
+    connectedCallback() {
+      const facade = this.querySelector<HTMLAnchorElement>('[data-facade]');
+      const { id, titre } = this.dataset;
+      if (!facade || !id) return;
+
+      // Avec JS, la façade se comporte comme un bouton (lecture sur place).
+      facade.setAttribute('role', 'button');
+
+      const lancer = (e: Event) => {
+        e.preventDefault();
+        const iframe = document.createElement('iframe');
+        // youtube-nocookie : YouTube ne dépose pas de témoin tant que la vidéo n'est pas lue.
+        iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+        iframe.title = titre ?? 'Vidéo YouTube';
+        iframe.allow =
+          'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        facade.replaceWith(iframe);
+        this.classList.add('joue');
+        iframe.focus(); // le clavier continue dans le lecteur
+      };
+
+      facade.addEventListener('click', lancer);
+      // Un vrai bouton réagit aussi à la barre d'espace.
+      facade.addEventListener('keydown', (e) => {
+        if (e.key === ' ') lancer(e);
+      });
+    }
+  }
+
+  customElements.define('lecteur-youtube', LecteurYouTube);
+</script>

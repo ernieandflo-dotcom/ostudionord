@@ -1,0 +1,103 @@
+---
+// Pied de page : coordonnées, navigation secondaire, réseaux, mentions.
+// Phase : P1 (étape a)
+import { SITE, NAVIGATION, DISCORD, COURRIEL, ADRESSE, reseauxActifs } from '../data/site';
+
+const annee = new Date().getFullYear();
+const reseaux = [{ nom: 'Discord', url: DISCORD }, ...reseauxActifs];
+---
+
+<footer class="pied">
+  <div class="wrap foot">
+    <div class="coord">
+      <strong>{SITE.nom}</strong> · Studio de création
+      <address>
+        {ADRESSE.rue}, {ADRESSE.quartier} ({ADRESSE.ville}) {ADRESSE.codePostal}<br />
+        <a href={`mailto:${COURRIEL}`}>{COURRIEL}</a>
+      </address>
+    </div>
+
+    <nav aria-label="Pied de page">
+      {NAVIGATION.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+
+    <ul class="reseaux" aria-label="Réseaux sociaux">
+      {
+        reseaux.map((r) => (
+          <li>
+            <a href={r.url} target="_blank" rel="noopener">
+              {r.nom}
+              <span class="sr"> (nouvel onglet)</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="wrap mentions mono">
+    <span>© {annee} {SITE.nom}</span>
+    <a href="/confidentialite/">Confidentialité</a>
+  </div>
+</footer>
+
+<style>
+  .pied {
+    margin-top: 24px;
+    padding: 36px 0 28px;
+    border-top: 1px solid var(--ligne);
+    color: var(--doux);
+    font-size: .9rem;
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px 36px;
+  }
+  .coord strong { color: var(--texte); }
+  address { font-style: normal; }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-content: start;
+  }
+  a {
+    color: var(--doux);
+    text-decoration: none;
+  }
+  a:hover { color: var(--glace); }
+  .coord a {
+    color: var(--glace);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .reseaux {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    align-content: start;
+  }
+  .reseaux a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--contour);
+    color: var(--texte);
+    font-weight: 600;
+  }
+  .reseaux a:hover { background: rgba(193, 232, 255, .12); }
+  .mentions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 20px;
+    font-size: .7rem;
+  }
+</style>

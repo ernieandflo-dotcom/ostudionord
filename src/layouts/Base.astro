@@ -1,0 +1,97 @@
+---
+// Gabarit de base : <head> (SEO, polices, analytics), lien d'évitement, Header, <main>, Footer.
+// Phase : P1 (étape a)
+import '../styles/tokens.css';
+import '../styles/global.css';
+import { Font, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../data/site';
+
+interface Props {
+  /** Titre de la page, sans « — Studio Nord » (ajouté automatiquement). Vide = titre du site. */
+  title?: string;
+  description?: string;
+  /** Image de partage (Open Graph), importée depuis src/assets/. Défaut : /og-defaut.jpg */
+  image?: ImageMetadata;
+  imageAlt?: string;
+  /** 'article' pour une sortie, 'website' ailleurs. */
+  type?: 'website' | 'article';
+  /** true pour /merci/ et /404 : la page n'est pas indexée. */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = SITE.description,
+  image,
+  imageAlt = 'Logo de Studio Nord sur fond bleu nuit',
+  type = 'website',
+  noindex = false,
+} = Astro.props;
+
+const titreComplet = title ? `${title} — ${SITE.nom}` : SITE.titreDefaut;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// Image de partage : 1200 × 630 px, en URL absolue (exigé par Facebook et cie).
+let ogImage = new URL('/og-defaut.jpg', Astro.site).href;
+if (image) {
+  const optimisee = await getImage({ src: image, width: 1200, format: 'jpg' });
+  ogImage = new URL(optimisee.src, Astro.site).href;
+}
+
+// Cloudflare Web Analytics : en production seulement, si le jeton est défini.
+const jetonAnalytics = import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN;
+const analyticsActif = import.meta.env.PROD && Boolean(jetonAnalytics);
+---
+
+<!doctype html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titreComplet}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#040a14" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Polices auto-hébergées (API Fonts d'Astro). Seule la police d'affichage est préchargée. -->
+    <Font cssVariable="--font-bricolage" preload />
+    <Font cssVariable="--font-plex-mono" />
+
+    <!-- Partage sur les réseaux (Open Graph) -->
+    <meta property="og:site_name" content={SITE.nom} />
+    <meta property="og:locale" content={SITE.locale} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={titreComplet} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {
+      analyticsActif && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: jetonAnalytics })}
+        />
+      )
+    }
+  </head>
+  <body>
+    <a class="skip" href="#contenu">Aller au contenu</a>
+    <Header />
+    <main id="contenu" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

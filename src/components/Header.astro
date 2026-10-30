@@ -1,0 +1,223 @@
+---
+// En-tête en pastille flottante, logo, navigation et menu hamburger (îlot JS).
+// Phase : P1 (étape a)
+import { Image } from 'astro:assets';
+import logo from '../assets/logos/logoSN_2-smgl.png';
+import { NAVIGATION, DISCORD } from '../data/site';
+
+// Page active : /artistes/molie/ active « Artistes ».
+const chemin = Astro.url.pathname;
+const estActif = (href: string) => chemin === href || chemin.startsWith(href);
+---
+
+<header class="hdr" data-hdr>
+  <div class="bar">
+    <a class="logo" href="/">
+      <Image
+        src={logo}
+        alt="Studio Nord — accueil"
+        height={46}
+        densities={[1, 2]}
+        loading="eager"
+        fetchpriority="high"
+      />
+    </a>
+
+    <button
+      class="burger"
+      type="button"
+      aria-expanded="false"
+      aria-controls="nav-principale"
+      aria-label="Ouvrir le menu"
+      data-burger
+    >
+      <span aria-hidden="true"></span>
+    </button>
+
+    <nav class="nav" id="nav-principale" aria-label="Navigation principale">
+      {
+        NAVIGATION.map((item) => (
+          <a href={item.href} aria-current={estActif(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+      <a class="pill" href={DISCORD} target="_blank" rel="noopener">
+        Discord<span class="sr"> (nouvel onglet)</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    position: sticky;
+    top: 10px;
+    z-index: 50;
+    width: calc(100% - 2 * var(--g));
+    max-width: calc(var(--max) - 2 * var(--g));
+    margin: 10px auto 0;
+  }
+  .bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    padding: 0 8px 0 16px;
+    border-radius: 999px;
+    background: rgba(10, 24, 48, .82);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--ligne);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    border-radius: 999px;
+  }
+  .logo img {
+    height: 46px;
+    width: auto;
+  }
+
+  /* Bouton hamburger : 44 × 44 px (cible tactile minimale) */
+  .burger {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--cyan);
+    color: var(--encre);
+    cursor: pointer;
+  }
+  .burger span,
+  .burger span::before,
+  .burger span::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    position: relative;
+    transition: .25s;
+  }
+  .burger span::before,
+  .burger span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+  }
+  .burger span::before { top: -6px; }
+  .burger span::after { top: 6px; }
+  .burger[aria-expanded="true"] span { background: transparent; }
+  .burger[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); }
+  .burger[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); }
+
+  /* Menu mobile : panneau sous la pastille, caché tant qu'il est fermé
+     (display:none le retire aussi de l'ordre de tabulation). */
+  .nav {
+    position: absolute;
+    top: 68px;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    padding: 12px;
+    background: var(--abysse);
+    border: 1px solid var(--ligne);
+    border-radius: var(--r);
+  }
+  .nav.open { display: flex; }
+  .nav a {
+    padding: 12px 14px;
+    border-radius: 12px;
+    color: var(--texte);
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .nav a:hover { background: var(--survol); }
+  .nav a[aria-current="page"] {
+    color: var(--glace);
+    background: var(--survol);
+  }
+  .nav a.pill {
+    margin-top: 6px;
+    background: var(--cyan);
+    color: var(--encre);
+    text-align: center;
+  }
+  .nav a.pill:hover { background: var(--glace); }
+
+  /* Bureau : menu horizontal dans la pastille */
+  @media (min-width: 1000px) {
+    .burger { display: none; }
+    .nav {
+      position: static;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 2px;
+      padding: 0;
+      background: none;
+      border: 0;
+    }
+    .nav a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: .95rem;
+      font-weight: 600;
+    }
+    .nav a.pill { margin: 0 0 0 6px; }
+  }
+</style>
+
+<script>
+  // Menu hamburger : ouverture/fermeture accessible.
+  // Astro regroupe ce script et ne l'inclut qu'une fois par page.
+  const hdr = document.querySelector<HTMLElement>('[data-hdr]');
+  const burger = document.querySelector<HTMLButtonElement>('[data-burger]');
+  const nav = document.getElementById('nav-principale');
+
+  if (hdr && burger && nav) {
+    const estOuvert = () => burger.getAttribute('aria-expanded') === 'true';
+
+    const basculer = (ouvrir: boolean) => {
+      burger.setAttribute('aria-expanded', String(ouvrir));
+      burger.setAttribute('aria-label', ouvrir ? 'Fermer le menu' : 'Ouvrir le menu');
+      nav.classList.toggle('open', ouvrir);
+    };
+
+    burger.addEventListener('click', () => basculer(!estOuvert()));
+
+    // Échap : ferme et rend le focus au bouton.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && estOuvert()) {
+        basculer(false);
+        burger.focus();
+      }
+    });
+
+    // Le focus (Tab) quitte l'en-tête : on ferme.
+    hdr.addEventListener('focusout', (e) => {
+      const cible = e.relatedTarget as Node | null;
+      if (estOuvert() && cible && !hdr.contains(cible)) basculer(false);
+    });
+
+    // Clic en dehors de l'en-tête, ou sur un lien du menu : on ferme.
+    document.addEventListener('click', (e) => {
+      if (estOuvert() && !hdr.contains(e.target as Node)) basculer(false);
+    });
+    nav.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) basculer(false);
+    });
+
+    // Passage en affichage bureau : on remet le menu à zéro.
+    matchMedia('(min-width: 1000px)').addEventListener('change', (e) => {
+      if (e.matches) basculer(false);
+    });
+  }
+</script>

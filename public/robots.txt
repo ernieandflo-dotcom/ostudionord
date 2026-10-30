@@ -1,0 +1,1 @@
+# robots.txt — règles d'indexation et lien vers le sitemap. Phase : P1 (étape j)

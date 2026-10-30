@@ -1,0 +1,572 @@
+---
+// Accueil (variante B) : hero, vidéo vedette, à l'affiche, mur, séries, artistes,
+// boutique, infolettre et Discord.
+// Phase : P1 (étape b)
+import { getCollection, getEntries } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import LecteurYouTube from '../components/LecteurYouTube.astro';
+import Tuile from '../components/Tuile.astro';
+import Filtres from '../components/Filtres.astro';
+import CarteArtiste from '../components/CarteArtiste.astro';
+import FormInfolettre from '../components/FormInfolettre.astro';
+import { DISCORD, reseauxActifs } from '../data/site';
+import { LIBELLES, formaterDate, lienSortie, quand, trierSorties, typesPresents, type Sortie } from '../lib/sorties';
+import hoodieBlanc from '../assets/merch/merch_Hoodie001-white-f.avif';
+import hoodieNoir from '../assets/merch/merch_Hoodie001-black-f.avif';
+
+// ---------- Sorties ----------
+const sorties = trierSorties(await getCollection('sorties'));
+const vedette = sorties.find((s) => s.data.vedette && s.data.youtubeId && s.data.vignette);
+
+/** « Mølie X Sadaboy OELCOEPL » : noms des artistes et créateurs d'une sortie. */
+async function noms(s: Sortie): Promise<string> {
+  const personnes = [
+    ...(await getEntries(s.data.artistes)),
+    ...(await getEntries(s.data.createurs)),
+  ];
+  return personnes.map((p) => p?.data.nom).filter(Boolean).join(' X ');
+}
+
+// À l'affiche : à venir d'abord, puis les dernières publiées, sans la vedette ; 4 au maximum.
+const affiche = await Promise.all(
+  sorties
+    .filter((s) => s.id !== vedette?.id)
+    .slice(0, 4)
+    .map(async (s) => ({ sortie: s, noms: await noms(s) })),
+);
+
+// Mur : les 8 sorties les plus récentes (à venir en tête).
+const mur = sorties.slice(0, 8);
+const typesMur = typesPresents(mur);
+
+// ---------- Séries (P1 : placeholders, la collection « series » arrive en P2) ----------
+const series = [
+  {
+    titre: 'Les fondateurs',
+    texte: 'DF, GT, SB et MK : qui est derrière Studio Nord, et pourquoi.',
+    halo: 'rgba(0, 158, 226, .3)',
+  },
+  {
+    titre: 'Coulisses ALFROMEGA',
+    texte: 'Les séances, les shows et la route vers la mixtape.',
+    halo: 'rgba(193, 232, 255, .3)',
+  },
+];
+
+// ---------- Avec qui on crée : artistes (par ordre), puis les créateurs ----------
+const artistes = (await getCollection('artistes')).sort((a, b) => a.data.ordre - b.data.ordre);
+const createurs = (await getCollection('createurs')).sort((a, b) => a.data.ordre - b.data.ordre);
+
+const visages = [
+  ...artistes.map((a) => ({
+    href: `/artistes/${a.id}/`,
+    nom: a.data.nom,
+    sousTitre: a.data.role === 'beatmaker' ? 'Beatmaker' : a.data.genres.slice(0, 2).join(' · '),
+    initiales: a.data.initiales,
+    portrait: a.data.portrait,
+  })),
+  ...createurs.map((c) => ({
+    href: `/createurs/${c.id}/`,
+    nom: c.data.nom,
+    sousTitre: c.data.categories.join(' · '),
+    initiales: c.data.initiales,
+    portrait: c.data.portrait,
+  })),
+];
+
+const nomsVedette = vedette ? await noms(vedette) : '';
+---
+
+<Base>
+  <!-- ═════════ HERO + VIDÉO VEDETTE + À L'AFFICHE ═════════ -->
+  <section class="hero" aria-labelledby="h-accueil">
+    <div class="wrap">
+      <div class="hero-top">
+        <h1 id="h-accueil">
+          On fait <span class="c">le son.</span><br />On fait <span class="o">l'image.</span>
+        </h1>
+        <p>
+          Studio Nord crée de la musique, des vidéos, des séries et des évènements avec ses
+          artistes de Québec. Tout ce qu'on tourne et enregistre atterrit ici.
+        </p>
+      </div>
+
+      <div class:list={['vedette', { seule: !vedette }]}>
+        {
+          vedette && vedette.data.youtubeId && vedette.data.vignette && (
+            <LecteurYouTube
+              id={vedette.data.youtubeId}
+              titre={vedette.data.titre}
+              vignette={vedette.data.vignette}
+              prioritaire
+            >
+              <span class="mono glace">
+                <span aria-hidden="true">▶ </span>Vidéo vedette
+                {vedette.data.date && ` · ${formaterDate(vedette.data.date)}`}
+              </span>
+              <strong class="titre-vedette">{vedette.data.titre}</strong>
+              {nomsVedette && <span class="mono doux">{nomsVedette}</span>}
+            </LecteurYouTube>
+          )
+        }
+
+        <aside class="affiche" aria-labelledby="h-affiche">
+          <h2 id="h-affiche" class="mono">À l'affiche</h2>
+          <ol>
+            {
+              affiche.map(({ sortie: s, noms: n }) => (
+                <li>
+                  <a href={lienSortie(s)}>
+                    <span class="th">
+                      {s.data.vignette && (
+                        <Image src={s.data.vignette} alt="" width={144} quality="mid" />
+                      )}
+                    </span>
+                    <span>
+                      <small>
+                        {LIBELLES[s.data.type].un}
+                        {s.data.statut === 'a-venir' && ` · ${quand(s)}`}
+                      </small>
+                      <strong>{s.data.titre}</strong>
+                      {n && <small class="noms">{n}</small>}
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ol>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ MUR DE CONTENU ═════════ -->
+  <section class="sec-mur" aria-labelledby="h-mur">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <span class="mono">Fil de contenu</span>
+          <h2 id="h-mur">Ce qu'on vient de créer</h2>
+        </div>
+        <a class="lien" href="/contenu/">Tout voir <span aria-hidden="true">→</span></a>
+      </div>
+
+      {typesMur.length > 1 && <Filtres types={typesMur} cible="mur-accueil" />}
+
+      <div class="mur" id="mur-accueil">
+        {mur.map((s) => <Tuile sortie={s} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ SÉRIES (arrive en P2) ═════════ -->
+  <section class="sec-series" aria-labelledby="h-series">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <span class="mono">Séries</span>
+          <h2 id="h-series">À suivre, épisode par épisode</h2>
+        </div>
+      </div>
+      <div class="series">
+        {
+          series.map((s) => (
+            <article class="serie" style={`--halo: ${s.halo}`}>
+              <span class="mono ep">Arrive bientôt</span>
+              <div>
+                <h3>{s.titre}</h3>
+                <p>{s.texte}</p>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ AVEC QUI ON CRÉE ═════════ -->
+  <section class="sec-artistes" aria-labelledby="h-artistes">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <span class="mono">Les visages</span>
+          <h2 id="h-artistes">Avec qui on crée</h2>
+        </div>
+        <a class="lien" href="/artistes/">Les artistes <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="roster" role="list">
+        {
+          visages.map((v, i) => (
+            <li>
+              <CarteArtiste {...v} variante={i} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═════════ BOUTIQUE ═════════ -->
+  <section aria-labelledby="h-boutique">
+    <div class="wrap">
+      <div class="merch">
+        <div>
+          <span class="mono glace">Boutique</span>
+          <h2 id="h-boutique">Porte l'univers Bluestorm</h2>
+          <p>
+            Hoodies Studio Nord et beats de Purp Beatzz. Chaque achat finance le prochain
+            tournage.
+          </p>
+          <a class="btn btn-p" href="/boutique/">Voir la boutique</a>
+
+          <div class="beats">
+            <h3>Les beats arrivent bientôt</h3>
+            <p>Laisse ton courriel : on t'écrit une seule fois, le jour où ils sont en vente.</p>
+            <FormInfolettre liste="beats" />
+          </div>
+        </div>
+        <div class="imgs">
+          <Image
+            src={hoodieBlanc}
+            alt="Hoodie Studio Nord blanc, devant"
+            width={600}
+            widths={[300, 600]}
+            sizes="(min-width: 1240px) 290px, (min-width: 800px) 23vw, 45vw"
+          />
+          <Image
+            src={hoodieNoir}
+            alt="Hoodie Studio Nord noir, devant"
+            width={600}
+            widths={[300, 600]}
+            sizes="(min-width: 1240px) 290px, (min-width: 800px) 23vw, 45vw"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ INFOLETTRE + DISCORD ═════════ -->
+  <section id="infolettre" class="sec-duo" aria-labelledby="h-infolettre">
+    <div class="wrap duo">
+      <div class="box">
+        <span class="mono cyan">Infolettre</span>
+        <h2 id="h-infolettre">Le contenu, avant l'algorithme</h2>
+        <p>Nouveaux épisodes, sorties et drops dans ta boîte courriel. Une à deux fois par mois.</p>
+        <FormInfolettre liste="infolettre" />
+      </div>
+
+      <div class="box discord">
+        <span class="mono">Communauté</span>
+        <h2>Viens dans le Discord</h2>
+        <p>Avant-premières, votes sur le prochain contenu, jasettes avec les artistes.</p>
+        <a class="btn blanc" href={DISCORD} target="_blank" rel="noopener">
+          Rejoindre le serveur<span class="sr"> (nouvel onglet)</span>
+        </a>
+        {
+          reseauxActifs.length > 0 && (
+            <ul class="socials" aria-label="Réseaux sociaux">
+              {reseauxActifs.map((r) => (
+                <li>
+                  <a href={r.url} target="_blank" rel="noopener">
+                    {r.nom}
+                    <span class="sr"> (nouvel onglet)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .glace { color: var(--glace); }
+  .doux { color: var(--doux); }
+  .cyan { color: var(--cyan); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 36px 0 24px; }
+  .hero-top {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  @media (min-width: 900px) {
+    .hero-top { grid-template-columns: 1.3fr 1fr; align-items: end; }
+  }
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(2.5rem, 8.5vw, 5.8rem);
+    line-height: .9;
+    font-weight: 800;
+    font-variation-settings: "wdth" 80;
+    letter-spacing: -.02em;
+  }
+  .hero h1 .c { color: var(--cyan); }
+  .hero h1 .o {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--glace);
+  }
+  .hero-top p {
+    margin: 0;
+    max-width: 30rem;
+    color: var(--doux);
+    font-size: 1.05rem;
+  }
+
+  .vedette {
+    display: grid;
+    gap: 14px;
+  }
+  @media (min-width: 960px) {
+    .vedette:not(.seule) { grid-template-columns: 2fr 1fr; }
+  }
+  .titre-vedette {
+    display: block;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    line-height: 1.1;
+  }
+
+  /* À l'affiche */
+  .affiche {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .affiche h2 {
+    margin: 0 0 6px;
+    color: var(--cyan);
+  }
+  .affiche ol {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .affiche a {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 8px;
+    border-radius: 12px;
+    color: var(--texte);
+    text-decoration: none;
+  }
+  .affiche a:hover { background: var(--survol); }
+  .th {
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--bleu), var(--marine));
+  }
+  .th :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .affiche small {
+    display: block;
+    color: var(--doux);
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .affiche small.noms {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .affiche strong {
+    display: block;
+    font-size: .95rem;
+    line-height: 1.2;
+  }
+
+  /* ---------- Mur ---------- */
+  .sec-mur { padding-top: 24px; }
+  .mur {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: dense;
+  }
+  @media (min-width: 800px) {
+    .mur { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  /* ---------- Séries ---------- */
+  .sec-series { padding-top: 12px; }
+  .series {
+    display: grid;
+    gap: 12px;
+  }
+  @media (min-width: 800px) {
+    .series { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .serie {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 200px;
+    padding: 22px;
+    overflow: hidden;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .serie::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: var(--halo);
+    filter: blur(30px);
+  }
+  .serie .ep { color: var(--glace); }
+  .serie h3 {
+    margin: 8px 0 6px;
+    font-size: 1.5rem;
+    line-height: 1.05;
+    font-variation-settings: "wdth" 85;
+  }
+  .serie p {
+    margin: 0;
+    color: var(--doux);
+    font-size: .92rem;
+  }
+
+  /* ---------- Avec qui on crée ---------- */
+  .sec-artistes { background: var(--abysse); }
+  /* Défilement horizontal DANS la rangée seulement (la page, elle, ne défile pas de côté). */
+  .roster {
+    display: flex;
+    gap: 16px;
+    margin: 0;
+    padding: 4px 2px 10px;
+    list-style: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+  .roster li { flex: none; }
+
+  /* ---------- Boutique ---------- */
+  .merch {
+    display: grid;
+    gap: 22px;
+    align-items: center;
+    padding: 22px;
+    overflow: hidden;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: linear-gradient(120deg, var(--marine), var(--abysse));
+  }
+  @media (min-width: 800px) {
+    .merch { grid-template-columns: 1fr 1fr; padding: 32px; }
+  }
+  .merch h2 {
+    margin: 6px 0 10px;
+    font-size: clamp(1.7rem, 4.5vw, 2.6rem);
+    line-height: 1;
+    font-variation-settings: "wdth" 82;
+  }
+  .merch p {
+    margin: 0 0 18px;
+    color: var(--doux);
+  }
+  .beats {
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid var(--ligne);
+  }
+  .beats h3 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+  }
+  .beats p { margin-bottom: 12px; font-size: .92rem; }
+  .imgs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .imgs :global(img) {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--bleu), var(--abysse));
+  }
+
+  /* ---------- Infolettre + Discord ---------- */
+  .sec-duo { padding-top: 0; }
+  .duo {
+    display: grid;
+    gap: 12px;
+  }
+  @media (min-width: 900px) {
+    .duo { grid-template-columns: 1.3fr 1fr; }
+  }
+  .box {
+    padding: 26px 22px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .box h2 {
+    margin: 6px 0 10px;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    line-height: 1;
+    font-variation-settings: "wdth" 82;
+  }
+  .box p {
+    margin: 0 0 18px;
+    color: var(--doux);
+  }
+  .discord {
+    border: 0;
+    background: linear-gradient(140deg, var(--logo), var(--marine));
+  }
+  .discord p,
+  .discord .mono { color: var(--glace); }
+  .blanc {
+    background: #fff;
+    color: var(--encre);
+  }
+  .blanc:hover { background: var(--glace); }
+  .socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .socials a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(193, 232, 255, .4);
+    color: var(--texte);
+    font-weight: 600;
+    font-size: .9rem;
+    text-decoration: none;
+  }
+  .socials a:hover { background: rgba(193, 232, 255, .12); }
+</style>

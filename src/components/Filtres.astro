@@ -1,0 +1,78 @@
+---
+// Puces de filtre du mur de contenu (îlot JS, aria-pressed).
+// Phase : P1 (étape b) — réutilisées sur /contenu/ (étape c)
+//
+// Sans JavaScript : les puces restent cachées (attribut hidden) et toutes les tuiles
+// sont visibles. Le script révèle les puces, puis masque les tuiles d'un autre type.
+// Une zone « status » annonce le résultat aux lecteurs d'écran (« 4 contenus affichés »).
+import { LIBELLES, type TypeSortie } from '../lib/sorties';
+
+interface Props {
+  /** Types présents dans le mur (une puce par type, en plus de « Tout »). */
+  types: TypeSortie[];
+  /** id du conteneur des tuiles à filtrer. */
+  cible: string;
+}
+
+const { types, cible } = Astro.props;
+---
+
+<filtres-mur data-cible={cible}>
+  <div class="chips" role="group" aria-label="Filtrer par type" hidden data-puces>
+    <button type="button" class="chip" aria-pressed="true" data-f="tout">Tout</button>
+    {
+      types.map((t) => (
+        <button type="button" class="chip" aria-pressed="false" data-f={t}>
+          {LIBELLES[t].plusieurs}
+        </button>
+      ))
+    }
+  </div>
+  <p class="sr" role="status" data-statut></p>
+</filtres-mur>
+
+<style>
+  filtres-mur { display: block; }
+  /* Rangée défilante à l'intérieur de son conteneur : la page ne défile jamais de côté. */
+  .chips {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 2px 2px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chips[hidden] { display: none; }
+  .chips::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+  class FiltresMur extends HTMLElement {
+    connectedCallback() {
+      const puces = this.querySelector<HTMLElement>('[data-puces]');
+      const statut = this.querySelector<HTMLElement>('[data-statut]');
+      const mur = document.getElementById(this.dataset.cible ?? '');
+      if (!puces || !statut || !mur) return;
+
+      const boutons = [...puces.querySelectorAll<HTMLButtonElement>('button[data-f]')];
+      const tuiles = [...mur.querySelectorAll<HTMLElement>('[data-type]')];
+
+      puces.hidden = false; // JS actif : on montre les filtres
+
+      const filtrer = (filtre: string) => {
+        boutons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filtre)));
+        let n = 0;
+        tuiles.forEach((t) => {
+          const visible = filtre === 'tout' || t.dataset.type === filtre;
+          t.hidden = !visible;
+          if (visible) n++;
+        });
+        statut.textContent = n === 1 ? '1 contenu affiché' : `${n} contenus affichés`;
+      };
+
+      boutons.forEach((b) => b.addEventListener('click', () => filtrer(b.dataset.f ?? 'tout')));
+    }
+  }
+
+  customElements.define('filtres-mur', FiltresMur);
+</script>

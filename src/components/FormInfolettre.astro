@@ -1,0 +1,163 @@
+---
+// Formulaire d'inscription Brevo (placeholder) avec consentement Loi 25.
+// Phase : P1 (étape b)
+//
+// Deux listes, deux formulaires Brevo :
+//   - « infolettre » : sorties, épisodes, drops (bloc Infolettre de l'accueil) ;
+//   - « beats »      : un seul courriel quand les beats seront en vente (bandeau boutique).
+// Aucun JavaScript : le navigateur envoie le formulaire directement à Brevo.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// À FAIRE AVANT LE LANCEMENT : remplacer les deux adresses ci-dessous par celles
+// des formulaires Brevo (Brevo › Contacts › Formulaires › Partager › code HTML :
+// copier la valeur de action="https://….sibforms.com/serve/…").
+// Vérifier aussi les noms des champs (EMAIL, OPT_IN, email_address_check, locale)
+// avec le code HTML fourni par Brevo, et régler la redirection vers /merci/.
+// Tant qu'une adresse contient « REMPLACER », un avertissement s'affiche
+// dans `npm run dev` et dans la console de `npm run build`.
+// ─────────────────────────────────────────────────────────────────────────────
+const FORMULAIRES_BREVO = {
+  infolettre: 'https://REMPLACER.sibforms.com/serve/INFOLETTRE',
+  beats: 'https://REMPLACER.sibforms.com/serve/BEATS',
+} as const;
+
+type Liste = keyof typeof FORMULAIRES_BREVO;
+
+interface Props {
+  liste?: Liste;
+  /** Texte du bouton. */
+  bouton?: string;
+}
+
+const TEXTES: Record<Liste, { bouton: string; consentement: string }> = {
+  infolettre: {
+    bouton: "M'abonner",
+    consentement:
+      "J'accepte de recevoir l'infolettre de Studio Nord (une à deux fois par mois). Je peux me désabonner en tout temps.",
+  },
+  beats: {
+    bouton: "M'informer",
+    consentement:
+      "J'accepte que Studio Nord m'écrive quand les beats seront en vente. Je peux me désabonner en tout temps.",
+  },
+};
+
+const { liste = 'infolettre', bouton = TEXTES[liste].bouton } = Astro.props;
+const action = FORMULAIRES_BREVO[liste];
+const placeholder = action.includes('REMPLACER');
+
+if (placeholder && import.meta.env.PROD) {
+  console.warn(
+    `\n⚠  À FAIRE AVANT LE LANCEMENT : FormInfolettre (« ${liste} ») pointe encore vers un placeholder Brevo.\n`,
+  );
+}
+
+const idCourriel = `courriel-${liste}`;
+---
+
+<form class="form" action={action} method="POST">
+  {
+    placeholder && import.meta.env.DEV && (
+      <p class="rappel" role="note">
+        ⚠ Placeholder : remplacer l’adresse Brevo « {liste} » dans FormInfolettre.astro avant la mise
+        en ligne.
+      </p>
+    )
+  }
+
+  <!-- Piège à robots (honeypot) de Brevo : invisible, doit rester vide. -->
+  <div class="hp" aria-hidden="true">
+    <label for={`piege-${liste}`}>Ne pas remplir</label>
+    <input
+      id={`piege-${liste}`}
+      type="text"
+      name="email_address_check"
+      value=""
+      tabindex="-1"
+      autocomplete="off"
+    />
+  </div>
+  <input type="hidden" name="locale" value="fr" />
+
+  <div class="row">
+    <label class="sr" for={idCourriel}>Ton courriel</label>
+    <input
+      id={idCourriel}
+      type="email"
+      name="EMAIL"
+      placeholder="ton@courriel.com"
+      required
+      autocomplete="email"
+      inputmode="email"
+    />
+    <button class="btn btn-p" type="submit">{bouton}</button>
+  </div>
+
+  <label class="chk">
+    <input type="checkbox" name="OPT_IN" value="1" required />
+    <span>
+      {TEXTES[liste].consentement}
+      <a href="/confidentialite/">Confidentialité</a>
+    </span>
+  </label>
+</form>
+
+<style>
+  .form {
+    display: grid;
+    gap: 12px;
+  }
+  .row {
+    display: grid;
+    gap: 10px;
+  }
+  @media (min-width: 600px) {
+    .row {
+      display: flex;
+    }
+    .row input { flex: 1; min-width: 0; }
+  }
+  input[type='email'] {
+    width: 100%;
+    min-height: 50px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 1px solid var(--contour);
+    background: var(--nuit);
+    color: var(--texte);
+    font: inherit;
+  }
+  input[type='email']::placeholder { color: var(--indice); }
+  .chk {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    color: var(--doux);
+    font-size: .85rem;
+    line-height: 1.45;
+  }
+  .chk input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--cyan);
+  }
+  .chk a { color: var(--glace); }
+  .hp {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .rappel {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px dashed #ffb020;
+    background: rgba(255, 176, 32, .12);
+    color: #ffd27a;
+    font: 500 .8rem/1.4 var(--mono);
+  }
+</style>

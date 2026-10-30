@@ -1,0 +1,192 @@
+---
+// Tuile du mur de contenu : image fixe (ou boucle vidéo R2), type, titre, légende.
+// Phase : P1 (étape b) — réutilisée sur /contenu/ (étape c)
+//
+// Forme : vignette horizontale = tuile large (2 colonnes, 16:9), sinon verticale (9:16).
+// Vidéo R2 : muette, en boucle, preload="none" (rien n'est téléchargé avant la lecture).
+//   - ordinateur : lecture au survol ou au focus clavier ;
+//   - mobile : lecture quand la tuile est visible à l'écran ;
+//   - prefers-reduced-motion ou économie de données : jamais de lecture, l'image reste.
+// Sans JavaScript : l'image fixe s'affiche, la tuile reste un lien.
+import { getImage } from 'astro:assets';
+import { media } from '../data/site';
+import { LIBELLES, lienSortie, quand, type Sortie } from '../lib/sorties';
+
+interface Props {
+  sortie: Sortie;
+}
+
+const { sortie } = Astro.props;
+const { titre, type, legende, vignette, videoR2, boucleR2 } = sortie.data;
+
+const large = vignette ? vignette.width > vignette.height : false;
+
+// Une seule image optimisée, servie à la fois par <img> et par le poster de la vidéo
+// (le navigateur ne la télécharge qu'une fois).
+const image = vignette
+  ? await getImage({ src: vignette, width: large ? 960 : 540, format: 'webp' })
+  : undefined;
+
+const cheminVideo = boucleR2 ?? videoR2;
+const srcVideo = cheminVideo ? media(cheminVideo) : undefined;
+
+const sousTitre = legende ?? quand(sortie);
+---
+
+<a class:list={['tuile', { large }]} href={lienSortie(sortie)} data-type={type}>
+  {
+    image ? (
+      <img
+        class="fond"
+        src={image.src}
+        {...image.attributes}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+    ) : (
+      <span class="fond degrade" aria-hidden="true" />
+    )
+  }
+  {
+    srcVideo && (
+      <video
+        class="fond"
+        src={srcVideo}
+        poster={image?.src}
+        muted
+        loop
+        playsinline
+        preload="none"
+        disablepictureinpicture
+        aria-hidden="true"
+        tabindex="-1"
+        data-boucle
+      />
+    )
+  }
+  <span class="type mono">{LIBELLES[type].un}</span>
+  <span class="lbl">
+    <strong>{titre}</strong>
+    {sousTitre && <span class="mono sous">{sousTitre}</span>}
+  </span>
+</a>
+
+<style>
+  .tuile {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 9 / 16;
+    border-radius: 16px;
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+    color: var(--texte);
+    text-decoration: none;
+    transition: border-color .2s;
+  }
+  .tuile.large {
+    grid-column: span 2;
+    aspect-ratio: 16 / 9;
+  }
+  .tuile[hidden] { display: none; } /* filtres */
+  .tuile:hover { border-color: var(--cyan); }
+  .tuile:focus-visible {
+    outline: 3px solid var(--glace);
+    outline-offset: 2px;
+  }
+
+  .fond {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .degrade {
+    background:
+      radial-gradient(70% 60% at 50% 30%, rgba(0, 158, 226, .45), transparent),
+      linear-gradient(180deg, var(--abysse), var(--marine));
+  }
+  /* La vidéo reste invisible tant qu'elle ne joue pas : l'image fixe dessous fait foi. */
+  video.fond {
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  video.fond.lit { opacity: 1; }
+
+  .type {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(4, 10, 20, .75);
+    color: var(--glace);
+  }
+  .lbl {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 1;
+    padding: 40px 12px 12px;
+    background: linear-gradient(0deg, rgba(4, 10, 20, .95) 30%, transparent);
+  }
+  .lbl strong {
+    display: block;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .large .lbl strong { font-size: clamp(1.1rem, 2.6vw, 1.6rem); }
+  .sous {
+    display: block;
+    margin-top: 2px;
+    color: var(--doux);
+    font-size: .68rem;
+  }
+</style>
+
+<script>
+  // Boucles des tuiles. Astro n'inclut ce script qu'une fois, peu importe le nombre de tuiles.
+  const videos = document.querySelectorAll<HTMLVideoElement>('video[data-boucle]');
+  const mouvementReduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const economie = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    ?.saveData;
+
+  const jouer = (v: HTMLVideoElement) => {
+    v.play().then(
+      () => v.classList.add('lit'),
+      () => {}, // lecture refusée (ex. mode économie d'énergie) : l'image reste
+    );
+  };
+  const arreter = (v: HTMLVideoElement) => v.pause();
+
+  // Vidéo absente (ex. pas encore dans R2) : on la retire, l'image fixe reste.
+  videos.forEach((v) => v.addEventListener('error', () => v.remove()));
+
+  if (!mouvementReduit && !economie && videos.length) {
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      // Ordinateur : survol de la souris, ou focus au clavier.
+      videos.forEach((v) => {
+        const tuile = v.closest('a');
+        if (!tuile) return;
+        tuile.addEventListener('mouseenter', () => jouer(v));
+        tuile.addEventListener('mouseleave', () => arreter(v));
+        tuile.addEventListener('focus', () => jouer(v));
+        tuile.addEventListener('blur', () => arreter(v));
+      });
+    } else if ('IntersectionObserver' in window) {
+      // Mobile : lecture quand 60 % de la tuile est à l'écran, pause sinon.
+      const observateur = new IntersectionObserver(
+        (entrees) =>
+          entrees.forEach((e) => {
+            const v = e.target as HTMLVideoElement;
+            if (e.isIntersecting) jouer(v);
+            else arreter(v);
+          }),
+        { threshold: 0.6 },
+      );
+      videos.forEach((v) => observateur.observe(v));
+    }
+  }
+</script>

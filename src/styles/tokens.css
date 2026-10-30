@@ -1,0 +1,33 @@
+/* Jetons du design system : palette, polices, rayons, espacements (issus de la maquette B).
+   Phase : P1 (étape a) */
+
+:root {
+  /* Palette (maquette B, sans changement) */
+  --nuit: #040a14;      /* fond de page */
+  --abysse: #0a1830;    /* fond de section alternée, menu mobile */
+  --carte: #0c1d36;     /* fond des cartes et des tuiles */
+  --marine: #003f6b;
+  --logo: #0e5fb6;      /* bleu du logo */
+  --bleu: #0078c2;
+  --cyan: #009ee2;      /* accent principal : boutons, focus */
+  --glace: #c1e8ff;     /* accent clair : liens, survol */
+  --texte: #eaf5ff;
+  --doux: #a1bbd2;      /* texte secondaire */
+  --ligne: rgba(193, 232, 255, .13);
+
+  /* Valeurs que la maquette écrivait en dur, maintenant nommées */
+  --encre: #04121f;        /* texte sur fond cyan ou glace */
+  --indice: #7f9bb3;       /* texte d'exemple (placeholder) des champs */
+  --contour: rgba(193, 232, 255, .35); /* bordure des boutons fantômes et des champs */
+  --survol: rgba(0, 158, 226, .12);     /* fond au survol (menu, listes) */
+
+  /* Polices : les variables --font-* sont créées par l'API Fonts d'Astro
+     (voir astro.config.mjs). Elles incluent déjà les polices de repli. */
+  --display: var(--font-bricolage);
+  --mono: var(--font-plex-mono);
+
+  /* Gabarit */
+  --max: 1240px;  /* largeur maximale du contenu */
+  --g: 16px;      /* gouttière latérale */
+  --r: 20px;      /* rayon des grandes cartes */
+}
