@@ -19,15 +19,15 @@ partenaire: gt-media
 # Horaire des lives (heure du Québec). Pendant une plage, la fiche affiche « En live ».
 # Fin plus tôt que le début = se termine le lendemain (ex. debut: "22:00", fin: "01:00").
 # Retirer le « # » des lignes ci-dessous et ajuster :
-horaire:
-  plages:
-    - jours: [mardi, jeudi]
-      debut: "20:00"
-      fin: "23:00"
-    - jours: [samedi]
-      debut: "14:00"
-      fin: "17:00"
-  note: L'horaire peut changer ; les annonces passent sur Instagram.
+# horaire:
+#   plages:
+#     - jours: [mardi, jeudi]
+#       debut: "20:00"
+#       fin: "23:00"
+#     - jours: [samedi]
+#       debut: "14:00"
+#       fin: "17:00"
+#   note: L'horaire peut changer ; les annonces passent sur Instagram.
 # Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
 ---
 
