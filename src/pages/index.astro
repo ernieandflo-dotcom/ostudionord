@@ -11,6 +11,7 @@ import Filtres from '../components/Filtres.astro';
 import CarteArtiste from '../components/CarteArtiste.astro';
 import FormInfolettre from '../components/FormInfolettre.astro';
 import { DISCORD, reseauxActifs } from '../data/site';
+import { parOrdre, sousTitreArtiste } from '../lib/personnes';
 import { LIBELLES, formaterDate, lienSortie, nomsDe as noms, quand, trierSorties, typesPresents } from '../lib/sorties';
 import hoodieBlanc from '../assets/merch/merch_Hoodie001-white-f.avif';
 import hoodieNoir from '../assets/merch/merch_Hoodie001-black-f.avif';
@@ -46,14 +47,14 @@ const series = [
 ];
 
 // ---------- Avec qui on crée : artistes (par ordre), puis les créateurs ----------
-const artistes = (await getCollection('artistes')).sort((a, b) => a.data.ordre - b.data.ordre);
-const createurs = (await getCollection('createurs')).sort((a, b) => a.data.ordre - b.data.ordre);
+const artistes = (await getCollection('artistes')).sort(parOrdre);
+const createurs = (await getCollection('createurs')).sort(parOrdre);
 
 const visages = [
   ...artistes.map((a) => ({
     href: `/artistes/${a.id}/`,
     nom: a.data.nom,
-    sousTitre: a.data.role === 'beatmaker' ? 'Beatmaker' : a.data.genres.slice(0, 2).join(' · '),
+    sousTitre: sousTitreArtiste(a),
     initiales: a.data.initiales,
     portrait: a.data.portrait,
   })),

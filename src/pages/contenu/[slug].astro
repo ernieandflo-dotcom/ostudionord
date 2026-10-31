@@ -98,8 +98,8 @@ if ((d.youtubeId || srcVideo) && d.vignette && d.date) {
 <Base
   title={titrePage}
   description={description}
-  image={d.vignette}
-  imageAlt={d.vignetteAlt}
+  image={d.imagePartage ?? d.vignette}
+  imageAlt={d.imagePartage ? d.imagePartageAlt : d.vignetteAlt}
   type="article"
   publie={d.date}
 >

@@ -1,5 +1,245 @@
 ---
-// Lecteur de beat maison (îlot JS) : écoute intégrale, sans bouton de téléchargement,
-// avec avis de licence ; bouton d'achat Stripe en P3.
-// Phase : P1 → P3 (étape f)
+// Lecteur d'un beat (îlot JS) : écoute intégrale, sans bouton de téléchargement.
+// Phase : P1 (étape d) → P3 (bouton d'achat Stripe, étape f)
+// Utilisé par ListeBeats (fiche du beatmaker, boutique).
+//
+// Îlot = élément personnalisé <lecteur-beat>, comme <lecteur-youtube> :
+// le navigateur exécute connectedCallback() pour chaque lecteur de la page.
+//
+// - Sans JavaScript : lecteur audio natif du navigateur (même fichier, même règles).
+// - preload="none" : rien n'est téléchargé avant le clic sur Lire.
+// - Le MP3 vient de notre domaine (public/audio/beats/) : aucune requête à un tiers.
+// - Un seul beat joue à la fois dans la page.
+// Limite : « nodownload » retire le bouton du lecteur natif, mais un MP3 public
+// reste téléchargeable par quelqu'un de déterminé.
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  beat: CollectionEntry<'beats'>;
+}
+
+const { numero, titre, fichier, bpm, tonalite } = Astro.props.beat.data;
+const details = [bpm && `${bpm} BPM`, tonalite].filter(Boolean).join(' · ');
 ---
+
+<lecteur-beat class="beat" data-titre={titre}>
+  <button class="jouer" type="button" aria-label={`Lire ${titre}`} data-jouer hidden>
+    <svg class="ico-lire" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M8 5.5v13l10.5-6.5z" fill="currentColor"></path>
+    </svg>
+    <svg class="ico-pause" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"></path>
+    </svg>
+  </button>
+
+  <div class="corps">
+    <p class="haut">
+      <strong>{titre}</strong>
+      <span class="mono num">{numero}</span>
+    </p>
+    {details && <p class="mono details">{details}</p>}
+
+    <div class="piste" data-piste hidden>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="0.1"
+        value="0"
+        aria-label={`Position dans ${titre}`}
+        data-position
+        disabled
+      />
+      <span class="mono temps" data-temps>0:00</span>
+    </div>
+
+    <audio
+      src={fichier}
+      preload="none"
+      controls
+      controlslist="nodownload noplaybackrate"
+      data-audio
+    >
+      <a href={fichier}>Écouter {titre}</a>
+    </audio>
+    <p class="erreur" role="status" data-erreur hidden>Écoute indisponible pour le moment.</p>
+  </div>
+</lecteur-beat>
+
+<style>
+  .beat {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+    transition: border-color .2s;
+  }
+  .beat[data-etat='lecture'] { border-color: var(--cyan); }
+
+  .jouer {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--cyan);
+    color: var(--encre);
+    cursor: pointer;
+  }
+  .jouer[hidden] { display: none; }
+  .jouer:hover { background: var(--glace); }
+  .ico-pause,
+  [data-etat='lecture'] .ico-lire { display: none; }
+  [data-etat='lecture'] .ico-pause { display: block; }
+
+  /* Sans JS (bouton masqué), le corps prend toute la largeur. */
+  .corps { grid-column: 2; min-width: 0; }
+  .beat:not(:defined) .corps,
+  .jouer[hidden] + .corps { grid-column: 1 / -1; }
+
+  .haut {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+    margin: 0;
+  }
+  .haut strong {
+    font-size: 1.02rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .num { color: var(--cyan); font-size: .68rem; }
+  .details {
+    margin: 2px 0 0;
+    color: var(--doux);
+    font-size: .68rem;
+  }
+
+  .piste {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .piste[hidden] { display: none; }
+  .piste input {
+    flex: 1;
+    min-width: 0;
+    height: 24px; /* zone de clic confortable au doigt */
+    margin: 0;
+    accent-color: var(--cyan);
+    cursor: pointer;
+  }
+  .piste input:disabled { cursor: default; opacity: .5; }
+  .temps {
+    flex: none;
+    color: var(--doux);
+    font-size: .68rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  audio {
+    width: 100%;
+    margin-top: 8px;
+  }
+  audio[hidden] { display: none; }
+
+  .erreur {
+    margin: 6px 0 0;
+    color: var(--doux);
+    font-size: .85rem;
+  }
+</style>
+
+<script>
+  // m:ss, ex. 3:07
+  const minutes = (s: number) => {
+    if (!Number.isFinite(s)) return '0:00';
+    const t = Math.floor(s);
+    return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  };
+
+  class LecteurBeat extends HTMLElement {
+    connectedCallback() {
+      const audio = this.querySelector<HTMLAudioElement>('[data-audio]');
+      const bouton = this.querySelector<HTMLButtonElement>('[data-jouer]');
+      const piste = this.querySelector<HTMLElement>('[data-piste]');
+      const position = this.querySelector<HTMLInputElement>('[data-position]');
+      const temps = this.querySelector<HTMLElement>('[data-temps]');
+      const erreur = this.querySelector<HTMLElement>('[data-erreur]');
+      if (!audio || !bouton || !piste || !position || !temps || !erreur) return;
+
+      const titre = this.dataset.titre ?? '';
+
+      // Le JS est là : on remplace le lecteur natif par le nôtre.
+      audio.controls = false;
+      audio.hidden = true;
+      bouton.hidden = false;
+      piste.hidden = false;
+
+      let glisse = false; // l'utilisateur déplace le curseur
+
+      const afficher = () => {
+        const d = audio.duration;
+        const t = audio.currentTime;
+        if (!glisse && Number.isFinite(d) && d > 0) position.value = String((t / d) * 100);
+        const texte = Number.isFinite(d) ? `${minutes(t)} / ${minutes(d)}` : minutes(t);
+        temps.textContent = texte;
+        position.setAttribute('aria-valuetext', texte.replace(' / ', ' sur '));
+      };
+
+      bouton.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play().catch(() => {}); // refus du navigateur : l'erreur s'affiche via « error »
+        } else {
+          audio.pause();
+        }
+      });
+
+      audio.addEventListener('play', () => {
+        // Un seul beat à la fois.
+        document.querySelectorAll<HTMLAudioElement>('lecteur-beat audio').forEach((a) => {
+          if (a !== audio) a.pause();
+        });
+        this.dataset.etat = 'lecture';
+        bouton.setAttribute('aria-label', `Mettre ${titre} en pause`);
+      });
+      audio.addEventListener('pause', () => {
+        delete this.dataset.etat;
+        bouton.setAttribute('aria-label', `Lire ${titre}`);
+      });
+      audio.addEventListener('loadedmetadata', () => {
+        position.disabled = false;
+        afficher();
+      });
+      audio.addEventListener('timeupdate', afficher);
+      audio.addEventListener('ended', () => {
+        audio.currentTime = 0;
+        afficher();
+      });
+      audio.addEventListener('error', () => {
+        erreur.hidden = false;
+        bouton.disabled = true;
+      });
+
+      // Curseur : on déplace la lecture quand l'utilisateur le bouge (souris, doigt ou flèches).
+      position.addEventListener('input', () => {
+        glisse = true;
+        const d = audio.duration;
+        if (Number.isFinite(d)) audio.currentTime = (Number(position.value) / 100) * d;
+      });
+      position.addEventListener('change', () => {
+        glisse = false;
+      });
+    }
+  }
+
+  if (!customElements.get('lecteur-beat')) customElements.define('lecteur-beat', LecteurBeat);
+</script>

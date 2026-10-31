@@ -1,0 +1,57 @@
+---
+// Liste de beats (LecteurBeat) + avis de licence.
+// Phase : P1 (étape d) — réutilisée par la boutique (étape f)
+//
+// Les beats sont triés par numéro (SNB-0001, SNB-0002…).
+import type { CollectionEntry } from 'astro:content';
+import LecteurBeat from './LecteurBeat.astro';
+
+interface Props {
+  beats: CollectionEntry<'beats'>[];
+}
+
+const beats = [...Astro.props.beats].sort((a, b) => a.data.numero.localeCompare(b.data.numero));
+---
+
+{
+  beats.length > 0 && (
+    <div class="liste-beats">
+      <ol class="beats" role="list">
+        {beats.map((beat) => (
+          <li>
+            <LecteurBeat beat={beat} />
+          </li>
+        ))}
+      </ol>
+
+      <p class="avis" role="note">
+        <strong>Écoute seulement.</strong> Ces beats ne sont pas libres de droits : les
+        enregistrer, les publier ou les monétiser exige une licence. Abonnez-vous à l'infolettre
+        pour être informé de la disponibilité des licences.
+      </p>
+    </div>
+  )
+}
+
+<style>
+  .beats {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 800px) {
+    .beats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .avis {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border-left: 3px solid var(--cyan);
+    border-radius: 0 12px 12px 0;
+    background: var(--survol);
+    color: var(--doux);
+    font-size: .92rem;
+  }
+  .avis strong { color: var(--texte); }
+</style>

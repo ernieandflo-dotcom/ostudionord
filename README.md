@@ -12,6 +12,9 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
       « À FAIRE AVANT LE LANCEMENT ».
 - [ ] **Vidéos** : envoyer `public/media/video/` dans R2 (`video/decompte/`, `video/tuiles/`)
       et définir `PUBLIC_MEDIA_URL=https://media.ostudionord.ca` dans Cloudflare Pages.
+- [ ] **Bios des artistes** : remplacer le lorem ipsum sous le second `---` de chaque
+      `src/content/artistes/*.md` (et ajouter une `accroche` au besoin). Tant que ce n'est pas
+      fait, `npm run build` affiche « bio en lorem ipsum ».
 
 ## Démarrer
 
@@ -36,6 +39,38 @@ Ajouter un fichier `.md` dans `src/content/sorties/`, puis pousser sur `main`.
 - `serie` : regroupe des sorties liées (ex. `decompte-ouverture`). La page affiche alors la
   liste des épisodes. Nouvelle valeur → ajouter son titre dans `SERIES` (`src/lib/sorties.ts`).
 - Mur filtré par lien : `/contenu/?type=coulisses` (types : musique, video, coulisses, serie, live).
+
+- Image de partage : la vignette est recadrée au centre en 1200 × 630. Si le recadrage coupe
+  mal (vignette verticale), ajouter `imagePartage` (image horizontale dans `src/assets/sorties/`)
+  et `imagePartageAlt`.
+
+### Ajouter un artiste
+
+Créer `src/content/artistes/<slug>.md` (le nom du fichier donne l'adresse `/artistes/<slug>/`) :
+
+```yaml
+---
+nom: Mølie
+role: artiste            # ou beatmaker
+genres: [Pop, "R&B"]     # "R&B" entre guillemets (à cause du &)
+initiales: MØ            # affichées tant qu'il n'y a pas de portrait
+accroche: Une phrase.    # facultatif : cartes et partage (sinon phrase générée)
+portrait: ../../assets/artistes/molie.jpg   # carré, 1080 px idéalement
+portraitAlt: "Description du portrait"      # obligatoire avec un portrait
+liens:                   # seulement ceux qui existent
+  instagram: https://www.instagram.com/…
+  spotify: https://open.spotify.com/artist/…   # sans le « ?si=… » de partage
+  youtube: https://www.youtube.com/@…
+  site: https://…
+partenaire: gt-media     # facultatif : « Géré par » sur la fiche
+ordre: 1                 # facultatif : épingle en tête ; sinon ordre alphabétique
+---
+
+Bio en Markdown (3 à 5 phrases).
+```
+
+La fiche affiche d'elle-même les sorties où l'artiste figure (`artistes: [molie]` dans une
+sortie) et, pour un beatmaker, ses beats (`beatmaker: <slug>` dans `src/content/beats/`).
 
 ### Sous-titres (vidéos R2)
 

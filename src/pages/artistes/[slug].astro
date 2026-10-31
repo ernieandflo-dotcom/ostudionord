@@ -1,9 +1,443 @@
 ---
-// Fiche individuelle d'un artiste ou du beatmaker.
+// Fiche d'un artiste ou du beatmaker : /artistes/<slug>/
 // Phase : P1 (étape d)
-// getStaticPaths() renvoie une liste vide pour l'instant, afin que
-// `npm run build` passe ; il lira la collection à l'étape prévue.
-export function getStaticPaths() {
-  return [];
+//
+// getStaticPaths() crée une page par fichier de src/content/artistes/ :
+// molie.md → /artistes/molie/.
+//
+// Contenu : portrait (ou initiales), rôle, nom, genres, accroche, liens externes (remplis
+// seulement), bio (texte Markdown sous le frontmatter), partenaire, beats (beatmaker),
+// sorties où la personne apparaît, autres artistes, retour à la liste.
+// Données structurées : MusicGroup (artiste ; schema.org l'admet pour un musicien solo)
+// ou Person (beatmaker). Partage : type « profile », portrait carré.
+import { getCollection, getEntry, render } from 'astro:content';
+import { Image, getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import CarteArtiste from '../../components/CarteArtiste.astro';
+import Tuile from '../../components/Tuile.astro';
+import ListeBeats from '../../components/ListeBeats.astro';
+import FormInfolettre from '../../components/FormInfolettre.astro';
+import {
+  DEGRADES,
+  DEGRADE_PALE,
+  ROLES,
+  descriptionArtiste,
+  liensActifs,
+  parOrdre,
+  sousTitreArtiste,
+  type Artiste,
+} from '../../lib/personnes';
+import { trierSorties } from '../../lib/sorties';
+
+export async function getStaticPaths() {
+  const artistes = await getCollection('artistes');
+  return artistes.map((artiste) => ({ params: { slug: artiste.id }, props: { artiste } }));
 }
+
+interface Props {
+  artiste: Artiste;
+}
+
+const { artiste } = Astro.props;
+const d = artiste.data;
+const beatmaker = d.role === 'beatmaker';
+
+// Rappel au build : bio encore en lorem ipsum.
+if (import.meta.env.PROD && /lorem ipsum/i.test(artiste.body ?? '')) {
+  console.warn(`\n⚠  À FAIRE AVANT LE LANCEMENT : bio en lorem ipsum dans artistes/${artiste.id}.md\n`);
+}
+
+// Avatar sans portrait : même dégradé que sur /artistes/ (position dans la liste triée).
+const tous = (await getCollection('artistes')).sort(parOrdre);
+const position = tous.findIndex((a) => a.id === artiste.id);
+const fond = DEGRADES[position % DEGRADES.length];
+const clair = position % DEGRADES.length === DEGRADE_PALE;
+const autres = tous.filter((a) => a.id !== artiste.id);
+
+// Sorties où l'artiste apparaît (publiées et à venir), triées comme le mur.
+const sorties = trierSorties(
+  await getCollection('sorties', (s) => s.data.artistes.some((r) => r.id === artiste.id)),
+);
+
+// Beats (beatmaker seulement).
+const beats = beatmaker
+  ? await getCollection('beats', (b) => b.data.beatmaker.id === artiste.id)
+  : [];
+
+const partenaire = d.partenaire ? await getEntry(d.partenaire) : undefined;
+const liens = liensActifs(d.liens);
+
+// Bio : texte libre sous le frontmatter, rendu en HTML.
+const { Content } = await render(artiste);
+const aUneBio = Boolean(artiste.body?.trim());
+
+const description = descriptionArtiste(artiste);
+
+// ---------- Données structurées (JSON-LD, schema.org) ----------
+const absolu = (u: string) => new URL(u, Astro.site).href;
+const imageLd = d.portrait
+  ? await getImage({ src: d.portrait, width: 1080, height: 1080, fit: 'cover', format: 'jpg' })
+  : undefined;
+const personne = {
+  '@context': 'https://schema.org',
+  '@type': beatmaker ? 'Person' : 'MusicGroup',
+  name: d.nom,
+  url: absolu(Astro.url.pathname),
+  description,
+  ...(imageLd && { image: absolu(imageLd.src) }),
+  ...(beatmaker ? { jobTitle: 'Beatmaker' } : d.genres.length > 0 && { genre: d.genres }),
+  ...(liens.length > 0 && { sameAs: liens.map((l) => l.url) }),
+};
+// « < » échappé : le texte ne peut pas fermer la balise <script> par accident.
+const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
 ---
+
+<Base
+  title={d.nom}
+  description={description}
+  image={d.portrait}
+  imageAlt={d.portraitAlt}
+  type="profile"
+  partageCarre
+>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
+  </Fragment>
+
+  <article class="fiche" aria-labelledby="h-artiste">
+    <div class="wrap">
+      <nav class="fil" aria-label="Fil d'Ariane">
+        <a href="/artistes/"><span aria-hidden="true">← </span>Tous les artistes</a>
+      </nav>
+
+      <header class="tete">
+        <div class:list={['portrait', { clair }]} style={d.portrait ? undefined : `--bg: ${fond}`}>
+          {
+            d.portrait ? (
+              <Image
+                src={d.portrait}
+                alt={d.portraitAlt ?? ''}
+                width={260}
+                height={260}
+                densities={[1, 2]}
+                fit="cover"
+                priority
+              />
+            ) : (
+              <span aria-hidden="true">{d.initiales}</span>
+            )
+          }
+        </div>
+
+        <div class="infos">
+          <p class="mono role">{ROLES[d.role]}</p>
+          <h1 id="h-artiste">{d.nom}</h1>
+
+          {
+            d.genres.length > 0 && (
+              <ul class="genres" role="list" aria-label="Genres">
+                {d.genres.map((g) => (
+                  <li>{g}</li>
+                ))}
+              </ul>
+            )
+          }
+
+          {d.accroche && <p class="accroche">{d.accroche}</p>}
+
+          {
+            liens.length > 0 && (
+              <ul class="liens" role="list" aria-label={`${d.nom} ailleurs sur le web`}>
+                {liens.map((l) => (
+                  <li>
+                    <a class="btn btn-g" href={l.url} rel="noopener">
+                      {l.nom}
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </div>
+      </header>
+
+      {
+        (aUneBio || partenaire) && (
+          <div class="apropos">
+            {aUneBio && (
+              <section class="bio" aria-labelledby="h-bio">
+                <h2 id="h-bio" class="mono">À propos</h2>
+                <Content />
+              </section>
+            )}
+
+            {partenaire && (
+              <aside class="partenaire" aria-labelledby="h-partenaire">
+                <p class="mono" id="h-partenaire">Géré par</p>
+                <p class="p-nom">
+                  {partenaire.data.lien ? (
+                    <a href={partenaire.data.lien} rel="noopener">
+                      {partenaire.data.nom} <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    partenaire.data.nom
+                  )}
+                </p>
+                <p class="p-desc">{partenaire.data.description}</p>
+              </aside>
+            )}
+          </div>
+        )
+      }
+    </div>
+  </article>
+
+  <!-- Beats (beatmaker) -->
+  {
+    beats.length > 0 && (
+      <section id="beats" class="sec-beats" aria-labelledby="h-beats">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">Écoute intégrale</span>
+              <h2 id="h-beats">Ses beats</h2>
+            </div>
+          </div>
+          <ListeBeats beats={beats} />
+          <div class="avertir">
+            <h3>M'avertir quand les licences seront disponibles</h3>
+            <FormInfolettre liste="beats" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Sorties -->
+  {
+    sorties.length > 0 ? (
+      <section class="sec-sorties" aria-labelledby="h-sorties">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">Avec Studio Nord</span>
+              <h2 id="h-sorties">Ses sorties</h2>
+            </div>
+          </div>
+          <div class="mur">
+            {sorties.map((s) => (
+              <Tuile sortie={s} />
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : (
+      !beatmaker && (
+        <section class="sec-sorties" aria-labelledby="h-sorties">
+          <div class="wrap">
+            <div class="vide">
+              <h2 id="h-sorties">Ses sorties</h2>
+              <p>Ses premières sorties avec Studio Nord arrivent bientôt.</p>
+              <a class="lien" href="/#infolettre">
+                M'avertir des prochaines sorties <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+        </section>
+      )
+    )
+  }
+
+  <!-- Autres artistes -->
+  {
+    autres.length > 0 && (
+      <section class="sec-autres" aria-labelledby="h-autres">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">Les visages</span>
+              <h2 id="h-autres">D'autres artistes</h2>
+            </div>
+          </div>
+          <ul class="grille-av" role="list">
+            {autres.map((a) => (
+              <li>
+                <CarteArtiste
+                  href={`/artistes/${a.id}/`}
+                  nom={a.data.nom}
+                  sousTitre={sousTitreArtiste(a)}
+                  initiales={a.data.initiales}
+                  portrait={a.data.portrait}
+                  variante={tous.indexOf(a)}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <nav class="retour" aria-label="Retour à la liste des artistes">
+    <div class="wrap">
+      <a class="btn btn-p" href="/artistes/">Tous les artistes</a>
+      <a class="btn btn-g" href="/contenu/">Tout le contenu</a>
+    </div>
+  </nav>
+</Base>
+
+<style>
+  .fiche { padding: 18px 0 8px; }
+
+  .fil { margin-bottom: 18px; }
+  .fil a {
+    color: var(--doux);
+    font-size: .92rem;
+    text-decoration: none;
+  }
+  .fil a:hover { color: var(--glace); }
+
+  /* En-tête : portrait au-dessus sur mobile, à gauche dès 720 px. */
+  .tete {
+    display: grid;
+    gap: 22px;
+    justify-items: start;
+  }
+  @media (min-width: 720px) {
+    .tete {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 40px;
+    }
+  }
+
+  .portrait {
+    display: grid;
+    place-items: center;
+    width: 200px;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 2px solid var(--ligne);
+    background: var(--bg, var(--carte));
+    color: var(--glace);
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 0 1px 10px rgba(4, 10, 20, .7);
+  }
+  .portrait.clair { color: var(--encre); text-shadow: none; }
+  @media (min-width: 720px) {
+    .portrait { width: 260px; height: 260px; font-size: 3.6rem; }
+  }
+  .portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .infos { min-width: 0; }
+  .role { margin: 0 0 6px; color: var(--cyan); }
+  h1 {
+    margin: 0;
+    font-size: clamp(2.3rem, 8vw, 4.6rem);
+    line-height: .92;
+    font-weight: 800;
+    font-variation-settings: "wdth" 80;
+    letter-spacing: -.02em;
+    overflow-wrap: anywhere;
+  }
+
+  .genres,
+  .liens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .genres li {
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--ligne);
+    color: var(--doux);
+    font-size: .88rem;
+  }
+  .accroche {
+    margin: 16px 0 0;
+    max-width: 36rem;
+    color: var(--doux);
+    font-size: 1.08rem;
+  }
+  .liens { margin-top: 20px; }
+  .liens .btn { min-height: 44px; padding: 0 16px; font-size: .9rem; }
+
+  /* Bio + partenaire */
+  .apropos {
+    display: grid;
+    gap: 22px;
+    margin-top: 36px;
+  }
+  @media (min-width: 900px) {
+    .apropos { grid-template-columns: minmax(0, 1fr) 320px; align-items: start; gap: 40px; }
+  }
+  .bio { max-width: 46rem; color: var(--doux); }
+  .bio h2 { margin: 0 0 8px; color: var(--cyan); font-weight: 400; }
+  .bio :global(p) { margin: 0 0 12px; }
+  .bio :global(a) { color: var(--glace); }
+
+  .partenaire {
+    padding: 16px 18px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .partenaire .mono { margin: 0; color: var(--cyan); }
+  .p-nom {
+    margin: 4px 0 6px;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .p-nom a { color: var(--texte); }
+  .p-desc {
+    margin: 0;
+    color: var(--doux);
+    font-size: .92rem;
+  }
+
+  section { padding: 32px 0; }
+  .avertir {
+    max-width: 40rem;
+    margin-top: 24px;
+  }
+  .avertir h3 {
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+  }
+
+  .vide {
+    padding: 22px;
+    border-radius: var(--r);
+    border: 1px dashed var(--contour);
+  }
+  .vide h2 { margin: 0 0 6px; font-size: 1.3rem; }
+  .vide p { margin: 0 0 12px; color: var(--doux); }
+
+  .grille-av {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 28px 12px;
+    justify-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .retour { padding: 8px 0 64px; }
+  .retour .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+</style>

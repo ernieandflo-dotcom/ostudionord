@@ -6,6 +6,7 @@
 // Le dégradé dépend de la position dans la rangée (`variante`) : rien à saisir dans le contenu.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import { DEGRADES, DEGRADE_PALE } from '../lib/personnes';
 
 interface Props {
   href: string;
@@ -20,22 +21,18 @@ interface Props {
 
 const { href, nom, sousTitre, initiales, portrait, variante = 0 } = Astro.props;
 
-// Dégradés de la maquette B, dans l'ordre.
-const DEGRADES = [
-  'linear-gradient(160deg, #009ee2, #003f6b)',
-  'linear-gradient(160deg, #0e5fb6, #003f6b)',
-  'linear-gradient(160deg, #c1e8ff, #0078c2)',
-  'linear-gradient(200deg, #003f6b, #040a14)',
-  'linear-gradient(160deg, #0078c2, #003f6b)',
-  'repeating-linear-gradient(90deg, #009ee2 0 3px, #003f6b 3px 8px)',
-];
+// Dégradés de la maquette B (src/lib/personnes.ts), choisis selon la position.
 const i = variante % DEGRADES.length;
 const fond = DEGRADES[i];
-const clair = i === 2; // fond pâle : initiales foncées
+const clair = i === DEGRADE_PALE; // fond pâle : initiales foncées
 ---
 
 <a class="av" href={href}>
-  <span class:list={['rond', { clair }]} style={`--bg: ${fond}`} aria-hidden="true">
+  <span
+    class:list={['rond', { clair }]}
+    style={portrait ? undefined : `--bg: ${fond}`}
+    aria-hidden="true"
+  >
     {
       portrait ? (
         <Image src={portrait} alt="" width={132} height={132} densities={[1, 2]} fit="cover" />
@@ -66,7 +63,7 @@ const clair = i === 2; // fond pâle : initiales foncées
     overflow: hidden;
     border-radius: 50%;
     border: 2px solid transparent;
-    background: var(--bg);
+    background: var(--bg, var(--carte));
     color: var(--glace);
     font-size: 1.5rem;
     font-weight: 800;

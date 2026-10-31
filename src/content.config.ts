@@ -1,6 +1,6 @@
 // Schémas des collections de contenu (artistes, createurs, sorties, beats, partenaires).
 // Déclaration : defineCollection() + loader glob() (astro/loaders) + z (astro/zod).
-// Phase : P1 (étape a ; sorties revues à l'étape b)
+// Phase : P1 (étape a ; sorties revues aux étapes b, c et d)
 //
 // Un schéma décrit les champs attendus dans le frontmatter de chaque .md.
 // Champ manquant ou mal écrit = erreur claire au `npm run dev` ou au build,
@@ -68,7 +68,8 @@ const artistes = defineCollection({
         portraitAlt: z.string().optional(),
         liens,
         partenaire: reference('partenaires').optional(), // ex. gt-media
-        ordre: z.number().int().default(100), // ordre d'affichage (petit = en premier)
+        // Ordre d'affichage : petit = en premier ; à égalité (ou absent), ordre alphabétique.
+        ordre: z.number().int().default(100),
       })
       .refine((d) => !d.portrait || d.portraitAlt, altObligatoire('portrait')),
 });
@@ -141,6 +142,10 @@ const sorties = defineCollection({
           .string()
           .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Identifiant en minuscules-tirets, ex. decompte-ouverture')
           .optional(),
+        // Image de partage (Facebook, iMessage…) quand le recadrage automatique 1200 × 630
+        // de la vignette coupe mal (ex. vignette verticale). Horizontale de préférence.
+        imagePartage: image().optional(),
+        imagePartageAlt: z.string().optional(),
       })
       .refine((d) => !(d.youtubeId && d.videoR2), {
         message: 'Choisir youtubeId OU videoR2, pas les deux.',
@@ -167,7 +172,8 @@ const sorties = defineCollection({
           'Une vidéo exige une vignette dans src/assets/sorties/ (voir le README, « Vignettes YouTube »).',
         path: ['vignette'],
       })
-      .refine((d) => !d.vignette || d.vignetteAlt, altObligatoire('vignette')),
+      .refine((d) => !d.vignette || d.vignetteAlt, altObligatoire('vignette'))
+      .refine((d) => !d.imagePartage || d.imagePartageAlt, altObligatoire('imagePartage')),
 });
 
 const beats = defineCollection({

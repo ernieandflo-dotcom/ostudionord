@@ -16,8 +16,13 @@ interface Props {
   /** Image de partage (Open Graph), importée depuis src/assets/. Défaut : /og-defaut.jpg */
   image?: ImageMetadata;
   imageAlt?: string;
-  /** 'article' pour une sortie, 'website' ailleurs. */
-  type?: 'website' | 'article';
+  /** 'article' pour une sortie, 'profile' pour une fiche d'artiste ou de créateur, 'website' ailleurs. */
+  type?: 'website' | 'article' | 'profile';
+  /**
+   * true : image de partage carrée (1080 × 1080) et petite carte Twitter (« summary »),
+   * pour un portrait. Sinon l'image est recadrée au centre en 1200 × 630.
+   */
+  partageCarre?: boolean;
   /** true pour /merci/ et /404 : la page n'est pas indexée. */
   noindex?: boolean;
   /** Date de publication d'un article (sortie) : balise article:published_time. */
@@ -35,15 +40,25 @@ const {
   type = 'website',
   noindex = false,
   publie,
+  partageCarre = false,
 } = Astro.props;
 
 const titreComplet = title ? `${title} — ${SITE.nom}` : SITE.titreDefaut;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-// Image de partage : 1200 × 630 px, en URL absolue (exigé par Facebook et cie).
+// Image de partage, en URL absolue (exigé par Facebook et cie).
+// Recadrée au centre (fit: 'cover') au format attendu : 1200 × 630, ou 1080 × 1080 si partageCarre.
+// Astro n'agrandit jamais une image : une petite source donne une image de partage plus petite.
 let ogImage = new URL('/og-defaut.jpg', Astro.site).href;
 if (image) {
-  const optimisee = await getImage({ src: image, width: 1200, format: 'jpg' });
+  const [largeur, hauteur] = partageCarre ? [1080, 1080] : [1200, 630];
+  const optimisee = await getImage({
+    src: image,
+    width: largeur,
+    height: hauteur,
+    fit: 'cover',
+    format: 'jpg',
+  });
   ogImage = new URL(optimisee.src, Astro.site).href;
 }
 
@@ -79,7 +94,7 @@ const analyticsActif = import.meta.env.PROD && Boolean(jetonAnalytics);
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:alt" content={imageAlt} />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content={partageCarre ? 'summary' : 'summary_large_image'} />
     {type === 'article' && publie && (
       <meta property="article:published_time" content={publie.toISOString()} />
     )}

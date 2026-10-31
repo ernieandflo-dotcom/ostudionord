@@ -1,4 +1,170 @@
 ---
-// Index des artistes et du beatmaker.
+// Index des artistes et du beatmaker : /artistes/
 // Phase : P1 (étape d)
+//
+// Deux sections : les artistes (role: artiste), puis le beatmaker (role: beatmaker).
+// Tri : champ `ordre` si présent, sinon alphabétique (src/lib/personnes.ts).
+// Bandeau final vers /createurs/ (BHNWTH et les prochains).
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import CarteArtiste from '../../components/CarteArtiste.astro';
+import { genresEnTexte, parOrdre, sousTitreArtiste, type Artiste } from '../../lib/personnes';
+
+const tous = (await getCollection('artistes')).sort(parOrdre);
+const artistes = tous.filter((a) => a.data.role === 'artiste');
+const beatmakers = tous.filter((a) => a.data.role === 'beatmaker');
+
+// Le dégradé d'un avatar sans portrait suit sa position dans la liste complète.
+const variante = (a: Artiste) => tous.indexOf(a);
 ---
+
+<Page
+  title="Artistes"
+  surtitre="Les visages"
+  intro="Les artistes et le beatmaker avec qui Studio Nord crée, enregistre et tourne à Limoilou."
+  description="Les artistes de Studio Nord (Limoilou, Québec) : rap, R&B, afrobeats, pop, hip-hop, et Purp Beatzz, beatmaker de la maison."
+>
+  <section aria-labelledby="h-artistes">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <span class="mono">Voix</span>
+          <h2 id="h-artistes">Les artistes</h2>
+        </div>
+      </div>
+      <ul class="grille-av" role="list">
+        {
+          artistes.map((a) => (
+            <li>
+              <CarteArtiste
+                href={`/artistes/${a.id}/`}
+                nom={a.data.nom}
+                sousTitre={sousTitreArtiste(a)}
+                initiales={a.data.initiales}
+                portrait={a.data.portrait}
+                variante={variante(a)}
+              />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {
+    beatmakers.length > 0 && (
+      <section aria-labelledby="h-beatmaker">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">Production</span>
+              <h2 id="h-beatmaker">{beatmakers.length > 1 ? 'Les beatmakers' : 'Le beatmaker'}</h2>
+            </div>
+          </div>
+          <ul class="beatmakers" role="list">
+            {beatmakers.map((b) => (
+              <li class="bm">
+                <CarteArtiste
+                  href={`/artistes/${b.id}/`}
+                  nom={b.data.nom}
+                  sousTitre={sousTitreArtiste(b)}
+                  initiales={b.data.initiales}
+                  portrait={b.data.portrait}
+                  variante={variante(b)}
+                />
+                <div class="bm-txt">
+                  <p>
+                    Les instrus de la maison
+                    {b.data.genres.length > 0 && <> : {genresEnTexte(b.data.genres)}</>}.
+                    Ses beats s'écoutent en entier sur sa fiche.
+                  </p>
+                  <a class="lien" href={`/artistes/${b.id}/#beats`}>
+                    Écouter ses beats <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="sec-createurs" aria-labelledby="h-createurs">
+    <div class="wrap">
+      <div class="bandeau">
+        <div>
+          <span class="mono">Aussi chez Studio Nord</span>
+          <h2 id="h-createurs">Créateurs de contenu</h2>
+          <p>Live streaming, divertissement : les créateurs qui tournent avec nous.</p>
+        </div>
+        <a class="btn btn-g" href="/createurs/">Voir les créateurs</a>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section { padding: 32px 0; }
+
+  /* Grille de cartes : 2 colonnes sur un petit téléphone, plus dès qu'il y a de la place. */
+  .grille-av {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 28px 12px;
+    justify-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .beatmakers {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bm {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 20px;
+    max-width: 40rem;
+    padding: 18px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  @media (max-width: 420px) {
+    .bm { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  }
+  .bm-txt p {
+    margin: 0 0 10px;
+    color: var(--doux);
+  }
+
+  .sec-createurs { padding-bottom: 64px; }
+  .bandeau {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: linear-gradient(120deg, var(--marine), var(--abysse));
+  }
+  .bandeau .mono { color: var(--glace); }
+  .bandeau h2 {
+    margin: 6px 0 6px;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    line-height: 1;
+    font-variation-settings: "wdth" 82;
+  }
+  .bandeau p {
+    margin: 0;
+    color: var(--doux);
+  }
+</style>
