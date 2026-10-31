@@ -150,9 +150,10 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
               <ul class="liens" role="list" aria-label={`${d.nom} ailleurs sur le web`}>
                 {liens.map((l) => (
                   <li>
-                    <a class="btn btn-g" href={l.url} rel="noopener">
+                    <a class="btn btn-g" href={l.url} target="_blank" rel="noopener">
                       {l.nom}
                       <span aria-hidden="true">↗</span>
+                      <span class="sr">(nouvel onglet)</span>
                     </a>
                   </li>
                 ))}
@@ -177,8 +178,9 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
                 <p class="mono" id="h-partenaire">Géré par</p>
                 <p class="p-nom">
                   {partenaire.data.lien ? (
-                    <a href={partenaire.data.lien} rel="noopener">
+                    <a href={partenaire.data.lien} target="_blank" rel="noopener">
                       {partenaire.data.nom} <span aria-hidden="true">↗</span>
+                      <span class="sr">(nouvel onglet)</span>
                     </a>
                   ) : (
                     partenaire.data.nom
