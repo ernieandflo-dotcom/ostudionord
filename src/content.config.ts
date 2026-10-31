@@ -1,6 +1,6 @@
 // Schémas des collections de contenu (artistes, createurs, sorties, beats, partenaires).
 // Déclaration : defineCollection() + loader glob() (astro/loaders) + z (astro/zod).
-// Phase : P1 (étape a ; sorties revues aux étapes b, c et d)
+// Phase : P1 (étape a ; sorties revues aux étapes b, c et d ; horaire des créateurs à l'étape e)
 //
 // Un schéma décrit les champs attendus dans le frontmatter de chaque .md.
 // Champ manquant ou mal écrit = erreur claire au `npm run dev` ou au build,
@@ -37,6 +37,26 @@ const altObligatoire = (champ: string) => ({
 const cheminR2 = z
   .string()
   .regex(/^[^/].*\.(mp4|webm)$/, 'Chemin relatif dans R2, ex. video/decompte/x.mp4');
+
+// Horaire de diffusion d'un créateur (heure du Québec, America/Toronto).
+// Une plage dont la fin est plus tôt que le début se termine le lendemain (ex. 22:00 → 01:00).
+const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const;
+const heure = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Heure au format HH:MM, ex. 20:00');
+const horaire = z.object({
+  plages: z
+    .array(
+      z
+        .object({
+          jours: z.array(z.enum(JOURS)).min(1),
+          debut: heure,
+          fin: heure,
+        })
+        .refine((p) => p.debut !== p.fin, { message: 'debut et fin doivent être différents.' }),
+    )
+    .default([]),
+  // Phrase libre affichée sous l'horaire, ex. « Horaire variable : annonces sur Instagram. »
+  note: z.string().optional(),
+});
 
 // ---------- Collections ----------
 
@@ -86,7 +106,7 @@ const createurs = defineCollection({
         accroche: z.string().optional(),
         portrait: image().optional(),
         portraitAlt: z.string().optional(),
-        // Plateformes de diffusion. url: null = « bientôt », masquée à l'affichage.
+        // Plateformes de diffusion. url: null = pastille grisée « YouTube · bientôt », sans lien.
         plateformes: z
           .array(
             z.object({
@@ -95,8 +115,11 @@ const createurs = defineCollection({
             }),
           )
           .default([]),
+        // Horaire des lives (facultatif). Pendant une plage, la fiche affiche « En live ».
+        horaire: horaire.optional(),
         liens,
         partenaire: reference('partenaires').optional(),
+        // Ordre d'affichage : petit = en premier ; à égalité (ou absent), ordre alphabétique.
         ordre: z.number().int().default(100),
       })
       .refine((d) => !d.portrait || d.portraitAlt, altObligatoire('portrait')),

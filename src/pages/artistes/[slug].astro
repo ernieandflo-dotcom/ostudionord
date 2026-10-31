@@ -5,21 +5,22 @@
 // getStaticPaths() crée une page par fichier de src/content/artistes/ :
 // molie.md → /artistes/molie/.
 //
+// En-tête et encadré partenaire : composants partagés avec /createurs/[slug]/ (étape e).
 // Contenu : portrait (ou initiales), rôle, nom, genres, accroche, liens externes (remplis
 // seulement), bio (texte Markdown sous le frontmatter), partenaire, beats (beatmaker),
 // sorties où la personne apparaît, autres artistes, retour à la liste.
 // Données structurées : MusicGroup (artiste ; schema.org l'admet pour un musicien solo)
 // ou Person (beatmaker). Partage : type « profile », portrait carré.
 import { getCollection, getEntry, render } from 'astro:content';
-import { Image, getImage } from 'astro:assets';
+import { getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import CarteArtiste from '../../components/CarteArtiste.astro';
+import EnTetePersonne from '../../components/EnTetePersonne.astro';
+import EncadrePartenaire from '../../components/EncadrePartenaire.astro';
 import Tuile from '../../components/Tuile.astro';
 import ListeBeats from '../../components/ListeBeats.astro';
 import FormInfolettre from '../../components/FormInfolettre.astro';
 import {
-  DEGRADES,
-  DEGRADE_PALE,
   ROLES,
   descriptionArtiste,
   liensActifs,
@@ -50,8 +51,6 @@ if (import.meta.env.PROD && /lorem ipsum/i.test(artiste.body ?? '')) {
 // Avatar sans portrait : même dégradé que sur /artistes/ (position dans la liste triée).
 const tous = (await getCollection('artistes')).sort(parOrdre);
 const position = tous.findIndex((a) => a.id === artiste.id);
-const fond = DEGRADES[position % DEGRADES.length];
-const clair = position % DEGRADES.length === DEGRADE_PALE;
 const autres = tous.filter((a) => a.id !== artiste.id);
 
 // Sorties où l'artiste apparaît (publiées et à venir), triées comme le mur.
@@ -110,58 +109,18 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
         <a href="/artistes/"><span aria-hidden="true">← </span>Tous les artistes</a>
       </nav>
 
-      <header class="tete">
-        <div class:list={['portrait', { clair }]} style={d.portrait ? undefined : `--bg: ${fond}`}>
-          {
-            d.portrait ? (
-              <Image
-                src={d.portrait}
-                alt={d.portraitAlt ?? ''}
-                width={260}
-                height={260}
-                densities={[1, 2]}
-                fit="cover"
-                priority
-              />
-            ) : (
-              <span aria-hidden="true">{d.initiales}</span>
-            )
-          }
-        </div>
-
-        <div class="infos">
-          <p class="mono role">{ROLES[d.role]}</p>
-          <h1 id="h-artiste">{d.nom}</h1>
-
-          {
-            d.genres.length > 0 && (
-              <ul class="genres" role="list" aria-label="Genres">
-                {d.genres.map((g) => (
-                  <li>{g}</li>
-                ))}
-              </ul>
-            )
-          }
-
-          {d.accroche && <p class="accroche">{d.accroche}</p>}
-
-          {
-            liens.length > 0 && (
-              <ul class="liens" role="list" aria-label={`${d.nom} ailleurs sur le web`}>
-                {liens.map((l) => (
-                  <li>
-                    <a class="btn btn-g" href={l.url} target="_blank" rel="noopener">
-                      {l.nom}
-                      <span aria-hidden="true">↗</span>
-                      <span class="sr">(nouvel onglet)</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )
-          }
-        </div>
-      </header>
+      <EnTetePersonne
+        idTitre="h-artiste"
+        nom={d.nom}
+        etiquette={ROLES[d.role]}
+        initiales={d.initiales}
+        portrait={d.portrait}
+        portraitAlt={d.portraitAlt}
+        variante={position}
+        pastilles={d.genres}
+        accroche={d.accroche}
+        liens={liens}
+      />
 
       {
         (aUneBio || partenaire) && (
@@ -173,22 +132,7 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
               </section>
             )}
 
-            {partenaire && (
-              <aside class="partenaire" aria-labelledby="h-partenaire">
-                <p class="mono" id="h-partenaire">Géré par</p>
-                <p class="p-nom">
-                  {partenaire.data.lien ? (
-                    <a href={partenaire.data.lien} target="_blank" rel="noopener">
-                      {partenaire.data.nom} <span aria-hidden="true">↗</span>
-                      <span class="sr">(nouvel onglet)</span>
-                    </a>
-                  ) : (
-                    partenaire.data.nom
-                  )}
-                </p>
-                <p class="p-desc">{partenaire.data.description}</p>
-              </aside>
-            )}
+            {partenaire && <EncadrePartenaire partenaire={partenaire} />}
           </div>
         )
       }
@@ -300,81 +244,6 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
   }
   .fil a:hover { color: var(--glace); }
 
-  /* En-tête : portrait au-dessus sur mobile, à gauche dès 720 px. */
-  .tete {
-    display: grid;
-    gap: 22px;
-    justify-items: start;
-  }
-  @media (min-width: 720px) {
-    .tete {
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-      gap: 40px;
-    }
-  }
-
-  .portrait {
-    display: grid;
-    place-items: center;
-    width: 200px;
-    height: 200px;
-    overflow: hidden;
-    border-radius: 50%;
-    border: 2px solid var(--ligne);
-    background: var(--bg, var(--carte));
-    color: var(--glace);
-    font-size: 3rem;
-    font-weight: 800;
-    text-shadow: 0 1px 10px rgba(4, 10, 20, .7);
-  }
-  .portrait.clair { color: var(--encre); text-shadow: none; }
-  @media (min-width: 720px) {
-    .portrait { width: 260px; height: 260px; font-size: 3.6rem; }
-  }
-  .portrait :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .infos { min-width: 0; }
-  .role { margin: 0 0 6px; color: var(--cyan); }
-  h1 {
-    margin: 0;
-    font-size: clamp(2.3rem, 8vw, 4.6rem);
-    line-height: .92;
-    font-weight: 800;
-    font-variation-settings: "wdth" 80;
-    letter-spacing: -.02em;
-    overflow-wrap: anywhere;
-  }
-
-  .genres,
-  .liens {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .genres li {
-    padding: 4px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--ligne);
-    color: var(--doux);
-    font-size: .88rem;
-  }
-  .accroche {
-    margin: 16px 0 0;
-    max-width: 36rem;
-    color: var(--doux);
-    font-size: 1.08rem;
-  }
-  .liens { margin-top: 20px; }
-  .liens .btn { min-height: 44px; padding: 0 16px; font-size: .9rem; }
-
   /* Bio + partenaire */
   .apropos {
     display: grid;
@@ -388,25 +257,6 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
   .bio h2 { margin: 0 0 8px; color: var(--cyan); font-weight: 400; }
   .bio :global(p) { margin: 0 0 12px; }
   .bio :global(a) { color: var(--glace); }
-
-  .partenaire {
-    padding: 16px 18px;
-    border-radius: var(--r);
-    border: 1px solid var(--ligne);
-    background: var(--carte);
-  }
-  .partenaire .mono { margin: 0; color: var(--cyan); }
-  .p-nom {
-    margin: 4px 0 6px;
-    font-size: 1.2rem;
-    font-weight: 800;
-  }
-  .p-nom a { color: var(--texte); }
-  .p-desc {
-    margin: 0;
-    color: var(--doux);
-    font-size: .92rem;
-  }
 
   section { padding: 32px 0; }
   .avertir {

@@ -1,0 +1,54 @@
+---
+// Encadré « Géré par » d'une fiche d'artiste ou de créateur (ex. GT Média).
+// Phase : P1 (étape e) — utilisé par /artistes/[slug]/ et /createurs/[slug]/
+//
+// Le nom devient un lien (nouvel onglet) si le partenaire a un `lien` dans son .md.
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  partenaire: CollectionEntry<'partenaires'>;
+  /** Texte au-dessus du nom. */
+  etiquette?: string;
+}
+
+const { partenaire, etiquette = 'Géré par' } = Astro.props;
+const { nom, description, lien } = partenaire.data;
+---
+
+<aside class="partenaire" aria-labelledby="h-partenaire">
+  <p class="mono" id="h-partenaire">{etiquette}</p>
+  <p class="p-nom">
+    {
+      lien ? (
+        <a href={lien} target="_blank" rel="noopener">
+          {nom} <span aria-hidden="true">↗</span>
+          <span class="sr">(nouvel onglet)</span>
+        </a>
+      ) : (
+        nom
+      )
+    }
+  </p>
+  <p class="p-desc">{description}</p>
+</aside>
+
+<style>
+  .partenaire {
+    padding: 16px 18px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .mono { margin: 0; color: var(--cyan); }
+  .p-nom {
+    margin: 4px 0 6px;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .p-nom a { color: var(--texte); }
+  .p-desc {
+    margin: 0;
+    color: var(--doux);
+    font-size: .92rem;
+  }
+</style>

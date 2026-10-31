@@ -1,0 +1,123 @@
+---
+// Pastille « En live » d'un créateur, calculée d'après son horaire (îlot JS minuscule).
+// Phase : P1 (étape e)
+//
+// Ce n'est PAS l'état réel de la chaîne : interroger Twitch ferait une requête à un tiers
+// dès l'ouverture de la page (Loi 25). La pastille compare seulement l'heure du Québec
+// (America/Toronto) aux plages de l'horaire, d'où la mention « selon l'horaire ».
+// - Sans JavaScript, ou hors plage : rien ne s'affiche.
+// - Revérifié chaque minute : la pastille apparaît et disparaît sans recharger la page.
+// - Le point qui pulse s'arrête avec prefers-reduced-motion (règle de global.css).
+import type { Plage } from '../lib/personnes';
+
+interface Props {
+  plages: Plage[];
+}
+
+const { plages } = Astro.props;
+---
+
+{
+  plages.length > 0 && (
+    <statut-live class="live" data-plages={JSON.stringify(plages)} hidden>
+      <span class="point" aria-hidden="true" />
+      <strong>En live</strong>
+      <span class="selon">selon l'horaire</span>
+    </statut-live>
+  )
+}
+
+<style>
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 77, 109, .14);
+    border: 1px solid rgba(255, 77, 109, .5);
+    color: var(--texte);
+    font-size: .88rem;
+    line-height: 1.4;
+  }
+  .live[hidden] { display: none; }
+  .point {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff4d6d;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .selon { color: var(--doux); font-size: .8rem; }
+  @keyframes pulse {
+    50% { box-shadow: 0 0 0 6px rgba(255, 77, 109, 0); opacity: .55; }
+  }
+</style>
+
+<script>
+  const FUSEAU = 'America/Toronto'; // heure du Québec, heure avancée comprise
+  const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  const ABREGES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const SEMAINE = 7 * 24 * 60; // minutes
+
+  interface Plage {
+    jours: string[];
+    debut: string;
+    fin: string;
+  }
+
+  const minutes = (hhmm: string) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  // Minute de la semaine à Québec, lundi 0 h = 0.
+  const maintenant = () => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: FUSEAU,
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date());
+    const val = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+    return ABREGES.indexOf(val('weekday')) * 1440 + Number(val('hour')) * 60 + Number(val('minute'));
+  };
+
+  const enLive = (plages: Plage[]) => {
+    const t = maintenant();
+    return plages.some((p) =>
+      p.jours.some((jour) => {
+        const debut = JOURS.indexOf(jour) * 1440 + minutes(p.debut);
+        // Fin plus tôt que le début : la plage se termine le lendemain.
+        const duree = (minutes(p.fin) - minutes(p.debut) + 1440) % 1440;
+        // « + SEMAINE » : une plage du dimanche soir qui déborde sur lundi.
+        return [t, t + SEMAINE].some((x) => x >= debut && x < debut + duree);
+      }),
+    );
+  };
+
+  class StatutLive extends HTMLElement {
+    #minuterie?: number;
+
+    connectedCallback() {
+      let plages: Plage[] = [];
+      try {
+        plages = JSON.parse(this.dataset.plages ?? '[]');
+      } catch {
+        return;
+      }
+      const verifier = () => {
+        this.hidden = !enLive(plages);
+      };
+      verifier();
+      this.#minuterie = window.setInterval(verifier, 60_000);
+    }
+
+    disconnectedCallback() {
+      window.clearInterval(this.#minuterie);
+    }
+  }
+
+  if (!customElements.get('statut-live')) customElements.define('statut-live', StatutLive);
+</script>

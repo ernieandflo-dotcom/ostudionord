@@ -97,3 +97,73 @@ export const DEGRADES = [
 ] as const;
 
 export const DEGRADE_PALE = 2;
+
+// ---------- Créateurs (étape e) ----------
+
+export type Plage = NonNullable<Createur['data']['horaire']>['plages'][number];
+type NomPlateforme = Createur['data']['plateformes'][number]['nom'];
+
+const LIBELLES_PLATEFORMES: Record<NomPlateforme, string> = {
+  twitch: 'Twitch',
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
+  kick: 'Kick',
+  instagram: 'Instagram',
+};
+
+/** Ligne sous le nom sur les cartes : « Live streaming · Divertissement ». */
+export const sousTitreCreateur = (c: Createur) => c.data.categories.join(' · ');
+
+/**
+ * Description d'un créateur (balise meta et partage) : l'accroche, sinon une phrase générée, ex.
+ * « BHNWTH (@bigheadnesswiththehyphen), créateur de contenu avec Studio Nord à Limoilou (Québec) :
+ * live streaming, divertissement. »
+ */
+export function descriptionCreateur(c: Createur): string {
+  const { nom, pseudo, accroche, categories } = c.data;
+  if (accroche) return accroche;
+  const sujets = genresEnTexte(categories);
+  return (
+    `${nom}${pseudo ? ` (${pseudo})` : ''}, créateur de contenu avec Studio Nord à Limoilou (Québec)` +
+    `${sujets ? ` : ${sujets}` : ''}.`
+  );
+}
+
+export interface LiensCreateur {
+  /** Plateformes de diffusion avec une adresse : boutons principaux (« Regarder sur Twitch »). */
+  diffusion: LienExterne[];
+  /** Plateformes annoncées sans adresse : pastilles « YouTube · bientôt ». */
+  bientot: string[];
+  /** Autres liens (Instagram…), sans doublon avec les plateformes. */
+  autres: LienExterne[];
+}
+
+export function liensCreateur(c: Createur): LiensCreateur {
+  const { plateformes, liens } = c.data;
+  const diffusion = plateformes
+    .filter((p) => p.url)
+    .map((p) => ({ nom: LIBELLES_PLATEFORMES[p.nom], url: p.url! }));
+  const bientot = plateformes.filter((p) => !p.url).map((p) => LIBELLES_PLATEFORMES[p.nom]);
+  const dejaLa = new Set([...diffusion.map((l) => l.nom), ...bientot]);
+  const urls = new Set(diffusion.map((l) => l.url));
+  const autres = liensActifs(liens).filter((l) => !dejaLa.has(l.nom) && !urls.has(l.url));
+  return { diffusion, bientot, autres };
+}
+
+// ---------- Horaire des lives ----------
+
+// « 20:00 » → « 20 h » ; « 20:30 » → « 20 h 30 » (usage québécois).
+const enHeures = (hhmm: string) => {
+  const [h, m] = hhmm.split(':');
+  return `${Number(h)} h${m === '00' ? '' : ` ${m}`}`;
+};
+
+// « lundi, mercredi et vendredi »
+const enListe = (mots: string[]) =>
+  mots.length > 1 ? `${mots.slice(0, -1).join(', ')} et ${mots.at(-1)}` : (mots[0] ?? '');
+
+/** Ex. « Mardi et jeudi, de 20 h à 23 h ». */
+export function texteHoraire(p: Plage): string {
+  const jours = enListe(p.jours);
+  return `${jours.charAt(0).toUpperCase()}${jours.slice(1)}, de ${enHeures(p.debut)} à ${enHeures(p.fin)}`;
+}

@@ -12,8 +12,8 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
       « À FAIRE AVANT LE LANCEMENT ».
 - [ ] **Vidéos** : envoyer `public/media/video/` dans R2 (`video/decompte/`, `video/tuiles/`)
       et définir `PUBLIC_MEDIA_URL=https://media.ostudionord.ca` dans Cloudflare Pages.
-- [ ] **Bios des artistes** : remplacer le lorem ipsum sous le second `---` de chaque
-      `src/content/artistes/*.md` (et ajouter une `accroche` au besoin). Tant que ce n'est pas
+- [ ] **Bios des artistes et des créateurs** : remplacer le lorem ipsum sous le second `---`
+      de chaque `src/content/artistes/*.md` et `src/content/createurs/*.md` (et ajouter une `accroche` au besoin). Tant que ce n'est pas
       fait, `npm run build` affiche « bio en lorem ipsum ».
 
 ## Démarrer
@@ -71,6 +71,32 @@ Bio en Markdown (3 à 5 phrases).
 
 La fiche affiche d'elle-même les sorties où l'artiste figure (`artistes: [molie]` dans une
 sortie) et, pour un beatmaker, ses beats (`beatmaker: <slug>` dans `src/content/beats/`).
+
+### Ajouter un créateur
+
+Créer `src/content/createurs/<slug>.md` (adresse : `/createurs/<slug>/`). Mêmes champs que
+pour un artiste (`nom`, `initiales`, `accroche`, `portrait`, `portraitAlt`, `liens`,
+`partenaire`, `ordre`, bio sous le `---`), plus :
+
+```yaml
+pseudo: "@bigheadnesswiththehyphen"
+categories: [Live streaming, Divertissement]
+plateformes:                 # boutons « Regarder sur … » (la première sert aussi sur /createurs/)
+  - nom: twitch              # twitch, youtube, tiktok, kick, instagram
+    url: https://www.twitch.tv/…
+  - nom: youtube
+    url: null                # pas encore de chaîne : pastille grisée « YouTube · bientôt »
+horaire:                     # facultatif, heure du Québec
+  plages:
+    - jours: [mardi, jeudi]  # lundi … dimanche
+      debut: "20:00"
+      fin: "23:00"           # plus tôt que debut = se termine le lendemain
+  note: L'horaire peut changer ; les annonces passent sur Instagram.
+```
+
+Pendant une plage de l'horaire, la fiche et `/createurs/` affichent « En live, selon
+l'horaire ». C'est un calcul d'après l'horaire (dans le navigateur, chaque minute), pas l'état
+réel de la chaîne : interroger Twitch ferait une requête à un tiers (Loi 25).
 
 ### Sous-titres (vidéos R2)
 

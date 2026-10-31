@@ -1,4 +1,220 @@
 ---
-// Index des créateurs de contenu et live streaming.
+// Index des créateurs de contenu et live streaming : /createurs/
 // Phase : P1 (étape e)
+//
+// Une carte large par créateur (avec un seul créateur, une grille d'avatars aurait l'air vide) :
+// portrait, nom, pseudo, catégories, pastille « En live » selon l'horaire, bouton de diffusion,
+// partenaire, lien vers la fiche. 2 colonnes sur ordinateur dès qu'il y a plusieurs créateurs.
+// Bandeaux : « Tu crées du contenu ? » (Discord) et renvoi vers /artistes/.
+import { getCollection, getEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import Page from '../../layouts/Page.astro';
+import StatutLive from '../../components/StatutLive.astro';
+import { DISCORD } from '../../data/site';
+import {
+  DEGRADES,
+  DEGRADE_PALE,
+  liensCreateur,
+  parOrdre,
+  sousTitreCreateur,
+} from '../../lib/personnes';
+
+const createurs = await Promise.all(
+  (await getCollection('createurs')).sort(parOrdre).map(async (c, i) => ({
+    c,
+    liens: liensCreateur(c),
+    partenaire: c.data.partenaire ? await getEntry(c.data.partenaire) : undefined,
+    fond: DEGRADES[i % DEGRADES.length],
+    clair: i % DEGRADES.length === DEGRADE_PALE,
+  })),
+);
 ---
+
+<Page
+  title="Créateurs"
+  surtitre="Les visages"
+  intro="Live streaming, divertissement : les créateurs de contenu qui tournent avec Studio Nord."
+  description="Les créateurs de contenu de Studio Nord (Limoilou, Québec) : live streaming et divertissement, avec BHNWTH."
+>
+  <section aria-label="Liste des créateurs">
+    <div class="wrap">
+      <ul class:list={['cartes', { plusieurs: createurs.length > 1 }]} role="list">
+        {
+          createurs.map(({ c, liens, partenaire, fond, clair }) => {
+            const fiche = `/createurs/${c.id}/`;
+            const principal = liens.diffusion[0];
+            return (
+              <li class="carte">
+                <span
+                  class:list={['avatar', { clair }]}
+                  style={c.data.portrait ? undefined : `--bg: ${fond}`}
+                  aria-hidden="true"
+                >
+                  {c.data.portrait ? (
+                    <Image
+                      src={c.data.portrait}
+                      alt=""
+                      width={120}
+                      height={120}
+                      densities={[1, 2]}
+                      fit="cover"
+                    />
+                  ) : (
+                    c.data.initiales
+                  )}
+                </span>
+
+                <div class="corps">
+                  <h2>
+                    <a href={fiche}>{c.data.nom}</a>
+                  </h2>
+                  {c.data.pseudo && <p class="mono pseudo">{c.data.pseudo}</p>}
+                  {c.data.categories.length > 0 && <p class="cat">{sousTitreCreateur(c)}</p>}
+                  {c.data.horaire && <StatutLive plages={c.data.horaire.plages} />}
+                  {partenaire && <p class="gere">Géré par {partenaire.data.nom}</p>}
+
+                  <div class="actions">
+                    {principal && (
+                      <a class="btn btn-p" href={principal.url} target="_blank" rel="noopener">
+                        Regarder sur {principal.nom}
+                        <span aria-hidden="true">↗</span>
+                        <span class="sr">(nouvel onglet)</span>
+                      </a>
+                    )}
+                    <a class="lien" href={fiche}>
+                      Voir sa fiche<span class="sr"> : {c.data.nom}</span>{' '}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </div>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec-bandeaux" aria-labelledby="h-collab">
+    <div class="wrap">
+      <div class="bandeau">
+        <div>
+          <span class="mono">Collaborer</span>
+          <h2 id="h-collab">Tu crées du contenu ?</h2>
+          <p>Viens jaser avec l'équipe et la communauté sur le Discord de Studio Nord.</p>
+        </div>
+        <a class="btn btn-p" href={DISCORD} target="_blank" rel="noopener">
+          Rejoindre le Discord <span aria-hidden="true">↗</span>
+          <span class="sr">(nouvel onglet)</span>
+        </a>
+      </div>
+
+      <p class="aussi">
+        Tu cherches nos musiciens ?{' '}
+        <a class="lien" href="/artistes/">Voir les artistes <span aria-hidden="true">→</span></a>
+      </p>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section { padding: 32px 0; }
+
+  .cartes {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 900px) {
+    .cartes.plusieurs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cartes:not(.plusieurs) { max-width: 46rem; }
+  }
+
+  .carte {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    padding: 20px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+    transition: border-color .2s;
+  }
+  .carte:hover { border-color: var(--cyan); }
+  @media (max-width: 480px) {
+    .carte { grid-template-columns: 1fr; }
+  }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 120px;
+    height: 120px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 2px solid var(--ligne);
+    background: var(--bg, var(--carte));
+    color: var(--glace);
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+  .avatar.clair { color: var(--encre); }
+  .avatar :global(img) { width: 100%; height: 100%; object-fit: cover; }
+
+  .corps { min-width: 0; }
+  h2 {
+    margin: 0;
+    font-size: clamp(1.7rem, 5vw, 2.4rem);
+    line-height: 1;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+    overflow-wrap: anywhere;
+  }
+  h2 a { color: var(--texte); text-decoration: none; }
+  h2 a:hover { color: var(--glace); }
+  .pseudo {
+    margin: 6px 0 0;
+    color: var(--doux);
+    text-transform: none;
+    letter-spacing: .02em;
+    overflow-wrap: anywhere;
+  }
+  .cat { margin: 8px 0 0; color: var(--doux); }
+  .corps :global(statut-live) { margin-top: 10px; }
+  .gere {
+    margin: 10px 0 0;
+    color: var(--doux);
+    font-size: .88rem;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin-top: 16px;
+  }
+
+  .sec-bandeaux { padding-bottom: 64px; }
+  .bandeau {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: linear-gradient(120deg, var(--marine), var(--abysse));
+  }
+  .bandeau .mono { color: var(--glace); }
+  .bandeau h2 { margin: 6px 0; font-size: clamp(1.5rem, 4vw, 2.2rem); }
+  .bandeau p { margin: 0; color: var(--doux); }
+  .aussi {
+    margin: 22px 0 0;
+    color: var(--doux);
+  }
+</style>

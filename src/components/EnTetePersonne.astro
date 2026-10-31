@@ -1,0 +1,230 @@
+---
+// En-tête d'une fiche d'artiste ou de créateur : portrait (ou initiales), étiquette, nom,
+// ligne secondaire (pseudo), pastilles (genres, catégories), accroche, boutons de liens.
+// Phase : P1 (étape e) — utilisé par /artistes/[slug]/ et /createurs/[slug]/
+//
+// Liens externes : nouvel onglet, avec « (nouvel onglet) » pour les lecteurs d'écran.
+// Le slot par défaut s'affiche sous les boutons (ex. horaire des lives d'un créateur).
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { DEGRADES, DEGRADE_PALE, type LienExterne } from '../lib/personnes';
+
+interface Props {
+  /** id du h1 (pour aria-labelledby de la page). */
+  idTitre: string;
+  nom: string;
+  /** Petit texte au-dessus du nom : « Artiste », « Beatmaker », « Créateur de contenu ». */
+  etiquette: string;
+  /** Ligne sous le nom, en police mono (ex. le pseudo). */
+  sousLigne?: string;
+  initiales: string;
+  portrait?: ImageMetadata;
+  portraitAlt?: string;
+  /** Position dans la liste triée : choisit le dégradé quand il n'y a pas de portrait. */
+  variante?: number;
+  /** Pastilles sous le nom (genres, catégories). */
+  pastilles?: string[];
+  /** Nom accessible de la liste de pastilles (« Genres », « Catégories »). */
+  libellePastilles?: string;
+  accroche?: string;
+  /** Boutons pleins (ex. « Regarder sur Twitch »). */
+  liensPrincipaux?: LienExterne[];
+  /** Préfixe des boutons pleins, ex. « Regarder sur ». */
+  prefixePrincipal?: string;
+  /** Boutons fantômes (Instagram, Spotify…). */
+  liens?: LienExterne[];
+  /** Plateformes annoncées sans lien : pastilles grisées « YouTube · bientôt ». */
+  bientot?: string[];
+}
+
+const {
+  idTitre,
+  nom,
+  etiquette,
+  sousLigne,
+  initiales,
+  portrait,
+  portraitAlt,
+  variante = 0,
+  pastilles = [],
+  libellePastilles = 'Genres',
+  accroche,
+  liensPrincipaux = [],
+  prefixePrincipal = '',
+  liens = [],
+  bientot = [],
+} = Astro.props;
+
+const i = variante % DEGRADES.length;
+const fond = DEGRADES[i];
+const clair = i === DEGRADE_PALE;
+const aDesLiens = liensPrincipaux.length + liens.length + bientot.length > 0;
+---
+
+<header class="tete">
+  <div class:list={['portrait', { clair }]} style={portrait ? undefined : `--bg: ${fond}`}>
+    {
+      portrait ? (
+        <Image
+          src={portrait}
+          alt={portraitAlt ?? ''}
+          width={260}
+          height={260}
+          densities={[1, 2]}
+          fit="cover"
+          priority
+        />
+      ) : (
+        <span aria-hidden="true">{initiales}</span>
+      )
+    }
+  </div>
+
+  <div class="infos">
+    <p class="mono role">{etiquette}</p>
+    <h1 id={idTitre}>{nom}</h1>
+    {sousLigne && <p class="mono sous-ligne">{sousLigne}</p>}
+
+    {
+      pastilles.length > 0 && (
+        <ul class="genres" role="list" aria-label={libellePastilles}>
+          {pastilles.map((g) => (
+            <li>{g}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    {accroche && <p class="accroche">{accroche}</p>}
+
+    {
+      aDesLiens && (
+        <ul class="liens" role="list" aria-label={`${nom} ailleurs sur le web`}>
+          {liensPrincipaux.map((l) => (
+            <li>
+              <a class="btn btn-p" href={l.url} target="_blank" rel="noopener">
+                {prefixePrincipal && `${prefixePrincipal} `}
+                {l.nom}
+                <span aria-hidden="true">↗</span>
+                <span class="sr">(nouvel onglet)</span>
+              </a>
+            </li>
+          ))}
+          {liens.map((l) => (
+            <li>
+              <a class="btn btn-g" href={l.url} target="_blank" rel="noopener">
+                {l.nom}
+                <span aria-hidden="true">↗</span>
+                <span class="sr">(nouvel onglet)</span>
+              </a>
+            </li>
+          ))}
+          {bientot.map((nomPlateforme) => (
+            <li>
+              <span class="bientot">{nomPlateforme} · bientôt</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <slot />
+  </div>
+</header>
+
+<style>
+  /* Portrait au-dessus sur mobile, à gauche dès 720 px. */
+  .tete {
+    display: grid;
+    gap: 22px;
+    justify-items: start;
+  }
+  @media (min-width: 720px) {
+    .tete {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 40px;
+    }
+  }
+
+  .portrait {
+    display: grid;
+    place-items: center;
+    width: 200px;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 2px solid var(--ligne);
+    background: var(--bg, var(--carte));
+    color: var(--glace);
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 0 1px 10px rgba(4, 10, 20, .7);
+  }
+  .portrait.clair { color: var(--encre); text-shadow: none; }
+  @media (min-width: 720px) {
+    .portrait { width: 260px; height: 260px; font-size: 3.6rem; }
+  }
+  .portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .infos { min-width: 0; max-width: 100%; }
+  .role { margin: 0 0 6px; color: var(--cyan); }
+  h1 {
+    margin: 0;
+    font-size: clamp(2.3rem, 8vw, 4.6rem);
+    line-height: .92;
+    font-weight: 800;
+    font-variation-settings: "wdth" 80;
+    letter-spacing: -.02em;
+    overflow-wrap: anywhere;
+  }
+  .sous-ligne {
+    margin: 10px 0 0;
+    color: var(--doux);
+    text-transform: none;
+    letter-spacing: .02em;
+    overflow-wrap: anywhere; /* pseudo très long : coupé plutôt que de déborder */
+  }
+
+  .genres,
+  .liens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .genres li {
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--ligne);
+    color: var(--doux);
+    font-size: .88rem;
+  }
+  .accroche {
+    margin: 16px 0 0;
+    max-width: 36rem;
+    color: var(--doux);
+    font-size: 1.08rem;
+  }
+  .liens { margin-top: 20px; }
+  .liens .btn { min-height: 44px; padding: 0 16px; font-size: .9rem; }
+
+  /* Plateforme annoncée : même forme qu'un bouton, mais grisée et sans lien. */
+  .bientot {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px dashed var(--ligne);
+    color: var(--doux);
+    font-size: .9rem;
+    font-weight: 600;
+  }
+</style>
