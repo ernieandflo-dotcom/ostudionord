@@ -2,7 +2,7 @@
 // Accueil (variante B) : hero, vidéo vedette, à l'affiche, mur, séries, artistes,
 // boutique, infolettre et Discord.
 // Phase : P1 (étape b)
-import { getCollection, getEntries } from 'astro:content';
+import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import LecteurYouTube from '../components/LecteurYouTube.astro';
@@ -11,22 +11,13 @@ import Filtres from '../components/Filtres.astro';
 import CarteArtiste from '../components/CarteArtiste.astro';
 import FormInfolettre from '../components/FormInfolettre.astro';
 import { DISCORD, reseauxActifs } from '../data/site';
-import { LIBELLES, formaterDate, lienSortie, quand, trierSorties, typesPresents, type Sortie } from '../lib/sorties';
+import { LIBELLES, formaterDate, lienSortie, nomsDe as noms, quand, trierSorties, typesPresents } from '../lib/sorties';
 import hoodieBlanc from '../assets/merch/merch_Hoodie001-white-f.avif';
 import hoodieNoir from '../assets/merch/merch_Hoodie001-black-f.avif';
 
 // ---------- Sorties ----------
 const sorties = trierSorties(await getCollection('sorties'));
 const vedette = sorties.find((s) => s.data.vedette && s.data.youtubeId && s.data.vignette);
-
-/** « Mølie X Sadaboy OELCOEPL » : noms des artistes et créateurs d'une sortie. */
-async function noms(s: Sortie): Promise<string> {
-  const personnes = [
-    ...(await getEntries(s.data.artistes)),
-    ...(await getEntries(s.data.createurs)),
-  ];
-  return personnes.map((p) => p?.data.nom).filter(Boolean).join(' X ');
-}
 
 // À l'affiche : à venir d'abord, puis les dernières publiées, sans la vedette ; 4 au maximum.
 const affiche = await Promise.all(
@@ -393,16 +384,7 @@ const nomsVedette = vedette ? await noms(vedette) : '';
   }
 
   /* ---------- Mur ---------- */
-  .sec-mur { padding-top: 24px; }
-  .mur {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-flow: dense;
-  }
-  @media (min-width: 800px) {
-    .mur { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  }
+  .sec-mur { padding-top: 24px; } /* grille .mur : global.css */
 
   /* ---------- Séries ---------- */
   .sec-series { padding-top: 12px; }

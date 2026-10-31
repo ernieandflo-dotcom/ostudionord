@@ -5,6 +5,7 @@ titre: "199 2e Avenue, QC, Limoilou"
 type: coulisses
 date: 2026-01-13
 legende: Décompte · J-2
+serie: decompte-ouverture
 videoR2: video/decompte/decompte-j2.mp4
 boucleR2: video/tuiles/decompte-j2.mp4
 vignette: ../../assets/sorties/decompte-j2.jpg

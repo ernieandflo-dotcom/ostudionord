@@ -1,0 +1,79 @@
+---
+// Lecteur d'une vidéo complète hébergée chez nous (R2, ou repli local /media).
+// Phase : P1 (étape c) — réutilisable sur les fiches artistes (étape d)
+//
+// Aucun JavaScript : c'est le lecteur natif du navigateur (<video controls>).
+//   - preload="none" : rien n'est téléchargé avant que la personne appuie sur Lecture ;
+//   - poster : l'image fixe affichée en attendant (vignette optimisée par Astro) ;
+//   - playsinline : sur iPhone, la vidéo joue dans la page au lieu de passer en plein écran.
+// Le format (vertical 9:16 ou horizontal) vient des dimensions de la vignette.
+//
+// Sous-titres : <track> WebVTT. Si le fichier vient d'un autre domaine (media.ostudionord.ca),
+// le navigateur exige crossorigin="anonymous" ET une règle CORS sur le bucket R2
+// (voir le README, « Sous-titres »). L'attribut n'est ajouté que si des sous-titres existent.
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  /** URL complète de la vidéo (utiliser media() de src/data/site.ts). */
+  src: string;
+  /** Titre de la vidéo : nom accessible du lecteur. */
+  titre: string;
+  /** Vignette locale : poster et proportions du lecteur. */
+  vignette: ImageMetadata;
+  /** URL complète du fichier .vtt (français), facultatif. */
+  sousTitres?: string;
+}
+
+const { src, titre, vignette, sousTitres } = Astro.props;
+
+const vertical = vignette.height > vignette.width;
+const poster = await getImage({
+  src: vignette,
+  width: Math.min(vignette.width, vertical ? 720 : 1280),
+  format: 'webp',
+});
+const type = src.endsWith('.webm') ? 'video/webm' : 'video/mp4';
+---
+
+<div class:list={['lv', { vertical }]} style={`--ratio: ${vignette.width} / ${vignette.height}`}>
+  <video
+    controls
+    preload="none"
+    playsinline
+    poster={poster.src}
+    width={vignette.width}
+    height={vignette.height}
+    aria-label={titre}
+    crossorigin={sousTitres ? 'anonymous' : undefined}
+  >
+    <source src={src} type={type} />
+    {sousTitres && <track kind="captions" src={sousTitres} srclang="fr" label="Français" />}
+    <p>
+      Ton navigateur ne peut pas lire cette vidéo.
+      <a href={src}>Ouvrir la vidéo</a>
+    </p>
+  </video>
+</div>
+
+<style>
+  .lv {
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: #000;
+  }
+  /* Vidéo verticale : hauteur limitée à ~80 % de l'écran, centrée. */
+  .lv.vertical {
+    max-width: min(100%, calc(80svh * 9 / 16));
+    margin-inline: auto;
+  }
+  video {
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--ratio);
+    object-fit: contain;
+    background: #000;
+  }
+</style>

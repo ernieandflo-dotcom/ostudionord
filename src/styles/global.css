@@ -149,6 +149,19 @@ main > section { padding: 56px 0; }
   border-color: var(--glace);
 }
 
+/* ---------- Mur de tuiles (accueil, /contenu/, « À voir aussi ») ---------- */
+/* 2 colonnes sur mobile, 4 dès 800 px. Une tuile large (vignette horizontale) en prend 2.
+   grid-auto-flow: dense comble les trous laissés par les tuiles larges. */
+.mur {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: dense;
+}
+@media (min-width: 800px) {
+  .mur { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 /* ---------- Mouvement réduit ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

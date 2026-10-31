@@ -129,6 +129,18 @@ const sorties = defineCollection({
         vignette: image().optional(),
         vignetteAlt: z.string().optional(),
         resume: z.string().optional(),
+        // Sous-titres français (WebVTT) d'une vidéo R2, ex. video/decompte/decompte-j1.vtt
+        sousTitresR2: z
+          .string()
+          .regex(/^[^/].*\.vtt$/, 'Chemin relatif dans R2, ex. video/decompte/x.vtt')
+          .optional(),
+        // Regroupement de sorties liées (ex. les 6 jours du décompte), en minuscules-tirets.
+        // Le titre affiché vient de SERIES dans src/lib/sorties.ts.
+        // P2 : deviendra reference('series') avec les mêmes valeurs, sans retoucher les .md.
+        serie: z
+          .string()
+          .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Identifiant en minuscules-tirets, ex. decompte-ouverture')
+          .optional(),
       })
       .refine((d) => !(d.youtubeId && d.videoR2), {
         message: 'Choisir youtubeId OU videoR2, pas les deux.',
@@ -137,6 +149,10 @@ const sorties = defineCollection({
       .refine((d) => !d.boucleR2 || d.videoR2, {
         message: 'boucleR2 accompagne une videoR2.',
         path: ['boucleR2'],
+      })
+      .refine((d) => !d.sousTitresR2 || d.videoR2, {
+        message: 'sousTitresR2 accompagne une videoR2 (YouTube gère ses propres sous-titres).',
+        path: ['sousTitresR2'],
       })
       .refine((d) => d.statut !== 'publiee' || d.date, {
         message: 'Une sortie publiée doit avoir une date (AAAA-MM-JJ).',

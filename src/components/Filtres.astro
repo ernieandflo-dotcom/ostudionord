@@ -1,10 +1,16 @@
 ---
 // Puces de filtre du mur de contenu (îlot JS, aria-pressed).
-// Phase : P1 (étape b) — réutilisées sur /contenu/ (étape c)
+// Phase : P1 (étape b) — réutilisées sur /contenu/ (étape c, avec le paramètre d'URL)
 //
 // Sans JavaScript : les puces restent cachées (attribut hidden) et toutes les tuiles
 // sont visibles. Le script révèle les puces, puis masque les tuiles d'un autre type.
 // Une zone « status » annonce le résultat aux lecteurs d'écran (« 4 contenus affichés »).
+//
+// Avec `url` : le filtre suit l'adresse de la page.
+//   - à l'arrivée, /contenu/?type=coulisses présélectionne « Coulisses »
+//     (URLSearchParams lit la partie après le « ? ») ;
+//   - au clic, l'adresse est mise à jour sans recharger la page (history.replaceState),
+//     pour qu'un mur filtré puisse se partager. Valeur inconnue = « Tout ».
 import { LIBELLES, type TypeSortie } from '../lib/sorties';
 
 interface Props {
@@ -12,12 +18,14 @@ interface Props {
   types: TypeSortie[];
   /** id du conteneur des tuiles à filtrer. */
   cible: string;
+  /** true : lit et met à jour le paramètre ?type= de l'adresse. */
+  url?: boolean;
 }
 
-const { types, cible } = Astro.props;
+const { types, cible, url = false } = Astro.props;
 ---
 
-<filtres-mur data-cible={cible}>
+<filtres-mur data-cible={cible} data-url={url ? '' : undefined}>
   <div class="chips" role="group" aria-label="Filtrer par type" hidden data-puces>
     <button type="button" class="chip" aria-pressed="true" data-f="tout">Tout</button>
     {
@@ -56,10 +64,13 @@ const { types, cible } = Astro.props;
 
       const boutons = [...puces.querySelectorAll<HTMLButtonElement>('button[data-f]')];
       const tuiles = [...mur.querySelectorAll<HTMLElement>('[data-type]')];
+      const suitUrl = this.hasAttribute('data-url');
+      const existe = (f: string | null): f is string =>
+        f !== null && boutons.some((b) => b.dataset.f === f);
 
       puces.hidden = false; // JS actif : on montre les filtres
 
-      const filtrer = (filtre: string) => {
+      const filtrer = (filtre: string, annoncer = true) => {
         boutons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filtre)));
         let n = 0;
         tuiles.forEach((t) => {
@@ -67,10 +78,30 @@ const { types, cible } = Astro.props;
           t.hidden = !visible;
           if (visible) n++;
         });
-        statut.textContent = n === 1 ? '1 contenu affiché' : `${n} contenus affichés`;
+        if (annoncer) statut.textContent = n === 1 ? '1 contenu affiché' : `${n} contenus affichés`;
       };
 
-      boutons.forEach((b) => b.addEventListener('click', () => filtrer(b.dataset.f ?? 'tout')));
+      const majUrl = (filtre: string) => {
+        const adresse = new URL(location.href);
+        if (filtre === 'tout') adresse.searchParams.delete('type');
+        else adresse.searchParams.set('type', filtre);
+        history.replaceState(history.state, '', adresse);
+      };
+
+      boutons.forEach((b) =>
+        b.addEventListener('click', () => {
+          const filtre = b.dataset.f ?? 'tout';
+          filtrer(filtre);
+          if (suitUrl) majUrl(filtre);
+        }),
+      );
+
+      // Présélection depuis l'adresse (?type=coulisses), sans annonce à l'arrivée.
+      if (suitUrl) {
+        const demande = new URLSearchParams(location.search).get('type');
+        if (existe(demande) && demande !== 'tout') filtrer(demande, false);
+        else if (demande !== null) majUrl('tout'); // valeur inconnue : on nettoie l'adresse
+      }
     }
   }
 

@@ -1,4 +1,94 @@
 ---
 // Mur de contenu filtrable : musique, vidéos, coulisses, séries, lives.
 // Phase : P1 (étape c)
+//
+// Toutes les sorties (à venir en tête, puis les publiées récentes d'abord).
+// Filtre présélectionnable par l'adresse : /contenu/?type=coulisses
+// (cible de la redirection de l'ancien /decompte.html, étape j).
+// Une sortie à venir mène au bloc « M'avertir » au bas de cette page.
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Tuile from '../../components/Tuile.astro';
+import Filtres from '../../components/Filtres.astro';
+import FormInfolettre from '../../components/FormInfolettre.astro';
+import { trierSorties, typesPresents } from '../../lib/sorties';
+
+const sorties = trierSorties(await getCollection('sorties'));
+const types = typesPresents(sorties);
+const total = sorties.length;
 ---
+
+<Page
+  title="Tout le contenu"
+  surtitre="Fil de contenu"
+  intro="Clips, coulisses, séries et lives : tout ce que Studio Nord tourne et enregistre avec ses artistes, du plus récent au plus ancien."
+  description="Clips, coulisses, séries et lives de Studio Nord et de ses artistes de Québec, réunis sur un seul mur."
+>
+  <section class="sec-mur" aria-labelledby="h-mur">
+    <div class="wrap">
+      <h2 id="h-mur" class="sr">Toutes les sorties</h2>
+      <p class="mono compte">{total === 1 ? '1 contenu' : `${total} contenus`}</p>
+
+      {types.length > 1 && <Filtres types={types} cible="mur-contenu" url />}
+
+      <div class="mur" id="mur-contenu">
+        {sorties.map((s) => <Tuile sortie={s} lienAVenir="#infolettre" />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- M'avertir : cible des tuiles « à venir » de ce mur -->
+  <section id="infolettre" class="sec-avertir" aria-labelledby="h-avertir">
+    <div class="wrap">
+      <div class="box">
+        <div>
+          <span class="mono">Prochaines sorties</span>
+          <h2 id="h-avertir">Sois averti en premier</h2>
+          <p>
+            Mixtape, clips, épisodes : on t'écrit quand ça sort. Une à deux fois par mois, pas
+            plus.
+          </p>
+        </div>
+        <FormInfolettre liste="infolettre" bouton="M'avertir" />
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  .sec-mur { padding-top: 20px; }
+  .compte {
+    margin: 0 0 14px;
+    color: var(--doux);
+  }
+
+  .sec-avertir { padding-top: 8px; }
+  /* scroll-margin : le titre ne se cache pas sous l'en-tête collant après un clic sur #infolettre */
+  #infolettre { scroll-margin-top: 80px; }
+  .box {
+    display: grid;
+    gap: 18px;
+    padding: 26px 22px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: linear-gradient(120deg, var(--marine), var(--abysse));
+  }
+  @media (min-width: 900px) {
+    .box {
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 32px;
+    }
+  }
+  .box .mono { color: var(--glace); }
+  .box h2 {
+    margin: 6px 0 10px;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    line-height: 1;
+    font-variation-settings: "wdth" 82;
+  }
+  .box p {
+    margin: 0;
+    color: var(--doux);
+  }
+</style>

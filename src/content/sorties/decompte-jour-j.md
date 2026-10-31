@@ -5,6 +5,7 @@ titre: "Officiellement ouvert"
 type: coulisses
 date: 2026-01-15
 legende: Décompte · Jour J
+serie: decompte-ouverture
 videoR2: video/decompte/decompte-jour-j.mp4
 boucleR2: video/tuiles/decompte-jour-j.mp4
 vignette: ../../assets/sorties/decompte-jour-j.jpg

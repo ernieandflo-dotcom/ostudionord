@@ -29,6 +29,21 @@ Ajouter un fichier `.md` dans `src/content/sorties/`, puis pousser sur `main`.
 - Sortie à venir : `statut: a-venir` avec une `date` prévue ou une `echeance` (ex. « Bientôt »).
 - Toute vidéo (YouTube ou R2) exige une `vignette` dans `src/assets/sorties/`.
   Vignette horizontale = tuile large sur le mur ; verticale = tuile 9:16.
+- Chaque sortie publiée a sa page : `src/content/sorties/ofv.md` → `/contenu/ofv/`.
+  Une sortie à venir n'a pas de page ; sa tuile mène au formulaire « M'avertir ».
+- `resume` : une ou deux phrases, affichées sur la page et reprises par Google et les réseaux.
+- Texte libre (crédits, réalisation…) : l'écrire en Markdown **sous** le second `---`.
+- `serie` : regroupe des sorties liées (ex. `decompte-ouverture`). La page affiche alors la
+  liste des épisodes. Nouvelle valeur → ajouter son titre dans `SERIES` (`src/lib/sorties.ts`).
+- Mur filtré par lien : `/contenu/?type=coulisses` (types : musique, video, coulisses, serie, live).
+
+### Sous-titres (vidéos R2)
+
+Fichier WebVTT (`.vtt`) envoyé dans R2 à côté de la vidéo, puis déclaré dans la sortie :
+`sousTitresR2: video/decompte/decompte-j1.vtt`. Le fichier vient d'un autre domaine
+(`media.ostudionord.ca`) : le bucket R2 doit autoriser `https://ostudionord.ca` dans sa
+règle CORS (R2 › bucket › Settings › CORS policy, méthode `GET`), sinon les sous-titres
+ne s'affichent pas et la vidéo peut refuser de jouer.
 
 ## Médias
 

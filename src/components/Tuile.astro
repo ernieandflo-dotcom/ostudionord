@@ -14,9 +14,11 @@ import { LIBELLES, lienSortie, quand, type Sortie } from '../lib/sorties';
 
 interface Props {
   sortie: Sortie;
+  /** Lien d'une sortie à venir (défaut : /#infolettre). /contenu/ passe « #infolettre ». */
+  lienAVenir?: string;
 }
 
-const { sortie } = Astro.props;
+const { sortie, lienAVenir } = Astro.props;
 const { titre, type, legende, vignette, videoR2, boucleR2 } = sortie.data;
 
 const large = vignette ? vignette.width > vignette.height : false;
@@ -33,7 +35,7 @@ const srcVideo = cheminVideo ? media(cheminVideo) : undefined;
 const sousTitre = legende ?? quand(sortie);
 ---
 
-<a class:list={['tuile', { large }]} href={lienSortie(sortie)} data-type={type}>
+<a class:list={['tuile', { large }]} href={lienSortie(sortie, lienAVenir)} data-type={type}>
   {
     image ? (
       <img
