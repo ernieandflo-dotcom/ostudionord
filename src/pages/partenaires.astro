@@ -1,0 +1,335 @@
+---
+// Partenaires : /partenaires/ (remplace l'ancienne page /studio/)
+// Phase : P1 (étape g)
+//
+// Index éditorial (maquette « option B ») : une rangée numérotée par partenaire, triée par `ordre`,
+// avec logo, rôle, description, relations et liens externes. Chaque rangée a un id
+// (/partenaires/#kota-studios). Puis le formulaire « Vous souhaitez faire partenariat ? »
+// (#partenariat).
+// VOUVOIEMENT sur toute cette page (exception au tutoiement du site).
+//
+// Relations (calculées dans src/lib/partenaires.ts, rien à écrire deux fois) :
+//   - « Propriété d'ALFROMEGA » / « Possède : Kota Studios » : champ `proprietaire` ;
+//   - « Gère : Ness Grosse-Tête · BHNWTH » : champ `partenaire` des artistes et créateurs.
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import Page from '../layouts/Page.astro';
+import FormPartenariat from '../components/FormPartenariat.astro';
+import { liensPartenaire, parOrdre, relationsPartenaires } from '../lib/partenaires';
+import ogPartenaires from '../assets/partenaires/og-partenaires.jpg';
+
+const partenaires = (await getCollection('partenaires')).sort(parOrdre);
+const relations = await relationsPartenaires(partenaires);
+
+// « d'ALFROMEGA », mais « de Kota Studios ».
+const de = (nom: string) => (/^[aeiouyhàâäéèêëîïôöûü]/i.test(nom) ? `d’${nom}` : `de ${nom}`);
+
+const rangees = partenaires.map((p, i) => ({
+  p,
+  num: String(i + 1).padStart(2, '0'),
+  liens: liensPartenaire(p),
+  rel: relations.get(p.id)!,
+}));
+---
+
+<Page
+  title="Partenaires"
+  surtitre="Écosystème local · Québec"
+  intro="Studio Nord avance avec des équipes d’ici. Label, studio, image, textile, promotion : voici les partenaires de Québec qui font rayonner nos artistes et nos contenus."
+  description="Les partenaires de Studio Nord à Québec : ALFROMEGA, Kota Studios, GT Média, On Est L’Atelier, NF Studio et Branche-Toi. Vous souhaitez faire partenariat ? Écrivez-nous."
+  image={ogPartenaires}
+  imageAlt="Partenaires de Studio Nord : les logos d’ALFROMEGA, Kota Studios, Grosse-Tête Média, On Est L’Atelier, NF Studio et Branche-Toi"
+>
+  <section aria-label="Nos partenaires">
+    <div class="wrap">
+      <ol class="index">
+        {
+          rangees.map(({ p, num, liens, rel }) => (
+            <li class="rangee" id={p.id}>
+              <span class="num mono" aria-hidden="true">
+                {num}
+              </span>
+
+              <div class="logo" style={`--fond: ${p.data.logoFond}`}>
+                {p.data.logo && (
+                  <Image
+                    src={p.data.logo}
+                    alt={p.data.logoAlt ?? ''}
+                    width={132}
+                    height={132}
+                    densities={[1, 2]}
+                    fit="contain"
+                    loading="lazy"
+                  />
+                )}
+              </div>
+
+              <div class="tete">
+                <h2>{p.data.nom}</h2>
+                {p.data.nomComplet && <p class="complet">{p.data.nomComplet}</p>}
+                <p class="mono role">{p.data.role}</p>
+              </div>
+
+              <div class="texte">
+                <p class="desc">{p.data.description}</p>
+                {(rel.proprietaire || rel.possede.length > 0 || rel.gere.length > 0) && (
+                  <ul class="relations" aria-label={`Liens de ${p.data.nom} avec Studio Nord`}>
+                    {rel.proprietaire && (
+                      <li>
+                        Propriété{' '}
+                        <a href={rel.proprietaire.href}>{de(rel.proprietaire.nom)}</a>
+                      </li>
+                    )}
+                    {rel.possede.length > 0 && (
+                      <li>
+                        Possède :{' '}
+                        {rel.possede.map((r, j) => (
+                          <>
+                            {j > 0 && ' · '}
+                            <a href={r.href}>{r.nom}</a>
+                          </>
+                        ))}
+                      </li>
+                    )}
+                    {rel.gere.length > 0 && (
+                      <li>
+                        Gère :{' '}
+                        {rel.gere.map((r, j) => (
+                          <>
+                            {j > 0 && ' · '}
+                            <a href={r.href}>{r.nom}</a>
+                          </>
+                        ))}
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
+
+              {liens.length > 0 && (
+                <ul class="liens" aria-label={`${p.data.nom} en ligne`}>
+                  {liens.map((l) => (
+                    <li>
+                      <a class="lnk" href={l.url} target="_blank" rel="noopener">
+                        {l.nom}
+                        <span class="sr"> {de(p.data.nom)}</span> <span aria-hidden="true">↗</span>
+                        <span class="sr">(nouvel onglet)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="partenariat" id="partenariat" aria-labelledby="h-partenariat">
+    <div class="wrap">
+      <div class="boite">
+        <div class="appel">
+          <p class="mono surtitre">Partenariat</p>
+          <h2 id="h-partenariat">Vous souhaitez faire partenariat ?</h2>
+          <p>
+            Vous êtes une entreprise, un organisme ou un collectif de la région de Québec ? Parlez-nous
+            de votre projet : nous vous répondrons par courriel.
+          </p>
+          <p class="autre">
+            Pour toute autre demande, écrivez-nous depuis la page <a class="lien" href="/contact/"
+              >Contact</a
+            >.
+          </p>
+        </div>
+        <div class="formulaire">
+          <FormPartenariat />
+        </div>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  /* ---------- Index des partenaires ---------- */
+  .index {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--ligne);
+  }
+
+  /* Mobile : logo + nom côte à côte, puis texte et liens en pleine largeur. */
+  .rangee {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-areas:
+      'logo tete'
+      'texte texte'
+      'liens liens';
+    gap: 14px 16px;
+    align-items: center;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--ligne);
+    scroll-margin-top: 96px; /* l'en-tête collant ne cache pas la rangée visée par l'ancre */
+  }
+  .num { display: none; }
+
+  @media (min-width: 760px) {
+    .rangee {
+      grid-template-columns: 2.5rem 132px minmax(0, 1fr);
+      grid-template-areas:
+        'num logo tete'
+        'num logo texte'
+        'num logo liens';
+      gap: 8px 24px;
+      align-items: start;
+    }
+    .num {
+      display: block;
+      grid-area: num;
+      padding-top: 6px;
+      color: var(--indice);
+    }
+  }
+  @media (min-width: 1100px) {
+    .rangee {
+      grid-template-columns: 2.5rem 132px minmax(0, 1fr) 16rem;
+      grid-template-areas:
+        'num logo tete liens'
+        'num logo texte liens';
+      align-items: center;
+    }
+  }
+
+  /* Cadre du logo : rempli de la couleur de fond du logo (logoFond). */
+  .logo {
+    grid-area: logo;
+    aspect-ratio: 1;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--fond);
+    border: 1px solid var(--ligne);
+  }
+  .logo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .tete {
+    grid-area: tete;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    min-width: 0;
+  }
+  .tete h2 {
+    margin: 0;
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+    line-height: 1;
+    font-weight: 800;
+    font-variation-settings: "wdth" 80;
+    overflow-wrap: anywhere;
+  }
+  .complet {
+    flex-basis: 100%;
+    order: 3;
+    margin: 0;
+    color: var(--doux);
+    font-size: .92rem;
+  }
+  .role {
+    margin: 0;
+    color: var(--cyan);
+  }
+
+  .texte {
+    grid-area: texte;
+    min-width: 0;
+  }
+  .desc {
+    margin: 0;
+    max-width: 44rem;
+    color: var(--doux);
+    line-height: 1.55;
+  }
+  .relations {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    color: var(--glace);
+    font: 500 .8rem/1.5 var(--mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .relations a {
+    color: var(--glace);
+    text-underline-offset: 3px;
+  }
+
+  .liens {
+    grid-area: liens;
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  @media (min-width: 1100px) {
+    .liens { justify-content: flex-end; margin: 0; }
+  }
+  .lnk {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--contour);
+    color: var(--texte);
+    font-weight: 600;
+    font-size: .92rem;
+    text-decoration: none;
+  }
+  .lnk:hover { border-color: var(--glace); }
+
+  /* ---------- Formulaire de partenariat ---------- */
+  .partenariat { scroll-margin-top: 80px; }
+  .boite {
+    display: grid;
+    gap: 28px;
+    padding: clamp(20px, 4vw, 48px);
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--abysse);
+  }
+  @media (min-width: 960px) {
+    .boite {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+      gap: 48px;
+    }
+  }
+  .surtitre {
+    margin: 0;
+    color: var(--cyan);
+  }
+  .appel h2 {
+    margin: 6px 0 14px;
+    font-size: clamp(1.9rem, 5vw, 3.1rem);
+    line-height: .95;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  .appel p:not(.surtitre) {
+    margin: 0 0 12px;
+    color: var(--doux);
+    line-height: 1.55;
+  }
+  .appel .autre { font-size: .92rem; }
+</style>

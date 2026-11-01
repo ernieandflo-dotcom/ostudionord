@@ -2,7 +2,7 @@
 // merch, cartesCadeaux).
 // Déclaration : defineCollection() + loader glob() (astro/loaders) + z (astro/zod).
 // Phase : P1 (étape a ; sorties revues aux étapes b, c et d ; horaire des créateurs à l'étape e ;
-// merch, cartes-cadeaux et .strict() à l'étape f)
+// merch, cartes-cadeaux et .strict() à l'étape f ; partenaires revus à l'étape g)
 //
 // Un schéma décrit les champs attendus dans le frontmatter de chaque .md.
 // Champ manquant ou mal écrit = erreur claire au `npm run dev` ou au build,
@@ -64,16 +64,44 @@ const horaire = z.object({
 
 // ---------- Collections ----------
 
+// Partenaires (page /partenaires/ et encadré « Géré par » des fiches).
+// Phase : P1 (étape g : plusieurs liens, rôle, propriétaire, ordre, fond du logo)
+//
+// `lien` (un seul lien) est remplacé par `liens` : un ancien « lien: » donne une erreur claire.
+// `proprietaire` : identifiant d'un autre partenaire (ex. kota-studios → alfromega).
+// La relation inverse (« Possède : Kota Studios ») est calculée par la page, pas écrite deux fois.
+const liensPartenaire = z
+  .object({
+    site: z.url().optional(),
+    instagram: z.url().optional(),
+    youtube: z.url().optional(),
+    facebook: z.url().optional(),
+    tiktok: z.url().optional(),
+  })
+  .strict()
+  .default({});
+
 const partenaires = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/partenaires' }),
   schema: ({ image }) =>
     z
       .object({
-        nom: z.string(),
+        nom: z.string(), // nom affiché, ex. GT Média
+        nomComplet: z.string().optional(), // ex. Grosse-Tête Média (affiché sous le nom)
+        role: z.string(), // ligne courte, ex. « Label · maison de production »
         description: z.string(),
-        lien: z.url().optional(),
+        liens: liensPartenaire,
+        proprietaire: reference('partenaires').optional(),
+        // Logo carré de préférence (src/assets/partenaires/). logoFond = couleur du fond
+        // du logo : elle remplit le cadre autour (ex. #bd1723 pour NF Studio).
         logo: image().optional(),
         logoAlt: z.string().optional(),
+        logoFond: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/, 'Couleur hexadécimale, ex. #000000')
+          .default('#000000'),
+        // Ordre d'affichage : petit = en premier ; à égalité (ou absent), ordre alphabétique.
+        ordre: z.number().int().default(100),
       })
       .strict()
       .refine((d) => !d.logo || d.logoAlt, altObligatoire('logo')),

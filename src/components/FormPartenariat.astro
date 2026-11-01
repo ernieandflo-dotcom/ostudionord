@@ -1,0 +1,218 @@
+---
+// Formulaire « Vous souhaitez faire partenariat ? » (Formspree), avec honeypot et
+// consentement Loi 25. Vouvoiement, comme le reste de la page /partenaires/.
+// Phase : P1 (étape g)
+//
+// Aucun JavaScript : le navigateur envoie le formulaire directement à Formspree.
+// L'adresse est dans src/lib/formulaires.ts (placeholder à remplacer avant le lancement).
+// Noms des champs : ce sont les intitulés que vous verrez dans le courriel de Formspree.
+// « email » est le nom attendu par Formspree pour pouvoir répondre directement au courriel.
+import { FORMSPREE, estPlaceholder } from '../lib/formulaires';
+
+const action = FORMSPREE.partenariat;
+const placeholder = estPlaceholder('partenariat');
+
+// Choix du champ « Type d'organisation » (envoyés tels quels à Formspree).
+const TYPES = [
+  'Label ou maison de production',
+  'Studio',
+  'Production photo ou vidéo',
+  'Mode et textile',
+  'Média ou promotion',
+  'Salle, festival ou événement',
+  'Commerce ou marque',
+  'Autre',
+];
+---
+
+<form class="form" id="form-partenariat" action={action} method="POST" accept-charset="UTF-8">
+  {
+    placeholder && import.meta.env.DEV && (
+      <p class="rappel" role="note">
+        ⚠ Placeholder : remplacer l’adresse Formspree « partenariat » dans src/lib/formulaires.ts
+        avant la mise en ligne.
+      </p>
+    )
+  }
+
+  <!-- Piège à robots (honeypot) de Formspree : invisible, doit rester vide. -->
+  <div class="hp" aria-hidden="true">
+    <label for="piege-partenariat">Ne pas remplir</label>
+    <input id="piege-partenariat" type="text" name="_gotcha" value="" tabindex="-1" autocomplete="off" />
+  </div>
+  <input type="hidden" name="_subject" value="Partenariat · ostudionord.ca" />
+  <input type="hidden" name="source" value="Page Partenaires" />
+
+  <div class="champs">
+    <div class="champ">
+      <label for="p-nom">Nom et prénom</label>
+      <input id="p-nom" name="nom" type="text" required autocomplete="name" maxlength="120" />
+    </div>
+
+    <div class="champ">
+      <label for="p-organisation">Organisation</label>
+      <input
+        id="p-organisation"
+        name="organisation"
+        type="text"
+        required
+        autocomplete="organization"
+        maxlength="120"
+      />
+    </div>
+
+    <div class="champ">
+      <label for="p-courriel">Courriel</label>
+      <input
+        id="p-courriel"
+        name="email"
+        type="email"
+        required
+        autocomplete="email"
+        inputmode="email"
+        maxlength="160"
+      />
+    </div>
+
+    <div class="champ">
+      <label for="p-tel">Téléphone <span class="fac">(facultatif)</span></label>
+      <input id="p-tel" name="telephone" type="tel" autocomplete="tel" maxlength="30" />
+    </div>
+
+    <div class="champ">
+      <label for="p-type">Type d’organisation</label>
+      <select id="p-type" name="type" required>
+        <option value="">Choisissez…</option>
+        {TYPES.map((t) => <option value={t}>{t}</option>)}
+      </select>
+    </div>
+
+    <div class="champ">
+      <label for="p-lien">Site web ou réseau <span class="fac">(facultatif)</span></label>
+      <!-- type="text" et non "url" : accepte aussi « instagram.com/votrecompte » sans https:// -->
+      <input
+        id="p-lien"
+        name="lien"
+        type="text"
+        inputmode="url"
+        autocomplete="url"
+        maxlength="200"
+        placeholder="instagram.com/votrecompte"
+      />
+    </div>
+
+    <div class="champ large">
+      <label for="p-projet">Votre projet</label>
+      <textarea
+        id="p-projet"
+        name="projet"
+        required
+        rows="6"
+        maxlength="2000"
+        aria-describedby="p-projet-aide"></textarea>
+      <p class="aide" id="p-projet-aide">
+        Ce que vous proposez, vos dates, ce que vous attendez de Studio Nord (2000 caractères au
+        plus).
+      </p>
+    </div>
+  </div>
+
+  <label class="chk">
+    <input type="checkbox" name="consentement" value="oui" required />
+    <span>
+      J’accepte que Studio Nord utilise ces renseignements uniquement pour répondre à ma demande de
+      partenariat. Ils sont transmis par Formspree, un service hébergé aux États-Unis.{' '}
+      <a href="/confidentialite/">Confidentialité</a>
+    </span>
+  </label>
+
+  <div>
+    <button class="btn btn-p" type="submit">Envoyer ma proposition</button>
+  </div>
+</form>
+
+<style>
+  .form {
+    display: grid;
+    gap: 18px;
+  }
+  .champs {
+    display: grid;
+    gap: 16px;
+  }
+  @media (min-width: 700px) {
+    .champs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .large { grid-column: 1 / -1; }
+  }
+  .champ {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  label {
+    font-weight: 600;
+    font-size: .95rem;
+  }
+  .fac {
+    color: var(--doux);
+    font-weight: 400;
+  }
+  input:not([type='checkbox']),
+  select,
+  textarea {
+    width: 100%;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid var(--contour);
+    background: var(--nuit);
+    color: var(--texte);
+    font: inherit;
+  }
+  textarea {
+    padding: 12px 16px;
+    min-height: 150px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  select { appearance: auto; }
+  input::placeholder { color: var(--indice); }
+  .aide {
+    margin: 0;
+    color: var(--doux);
+    font-size: .85rem;
+  }
+  .chk {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    color: var(--doux);
+    font-size: .88rem;
+    font-weight: 400;
+    line-height: 1.45;
+  }
+  .chk input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--cyan);
+  }
+  .chk a { color: var(--glace); }
+  .hp {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .rappel {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px dashed #ffb020;
+    background: rgba(255, 176, 32, .12);
+    color: #ffd27a;
+    font: 500 .8rem/1.4 var(--mono);
+  }
+</style>

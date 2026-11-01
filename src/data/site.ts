@@ -16,7 +16,7 @@ export const NAVIGATION = [
   { label: 'Artistes', href: '/artistes/' },
   { label: 'Créateurs', href: '/createurs/' },
   { label: 'Boutique', href: '/boutique/' },
-  { label: 'Studio', href: '/studio/' },
+  { label: 'Partenaires', href: '/partenaires/' },
   { label: 'Contact', href: '/contact/' },
 ] as const;
 

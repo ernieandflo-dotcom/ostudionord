@@ -15,6 +15,10 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 - [ ] **Bios des artistes et des créateurs** : remplacer le lorem ipsum sous le second `---`
       de chaque `src/content/artistes/*.md` et `src/content/createurs/*.md` (et ajouter une `accroche` au besoin). Tant que ce n'est pas
       fait, `npm run build` affiche « bio en lorem ipsum ».
+- [ ] **Formspree** : créer le formulaire « Partenariat » et remplacer l'adresse
+      `REMPLACER_PARTENARIAT` dans `src/lib/formulaires.ts` (voir « Formulaires » plus bas).
+- [ ] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
+      et Branche-Toi, et leur accord pour l'image de partage (mosaïque des logos).
 
 ## Démarrer
 
@@ -98,6 +102,32 @@ Pendant une plage de l'horaire, la fiche et `/createurs/` affichent « En live, 
 l'horaire ». C'est un calcul d'après l'horaire (dans le navigateur, chaque minute), pas l'état
 réel de la chaîne : interroger Twitch ferait une requête à un tiers (Loi 25).
 
+### Ajouter un partenaire
+
+Créer `src/content/partenaires/<slug>.md` et le logo dans `src/assets/partenaires/`
+(carré, 800 px, fond uni). La rangée apparaît sur `/partenaires/`, avec l'ancre
+`/partenaires/#<slug>`.
+
+```yaml
+---
+nom: GT Média
+nomComplet: Grosse-Tête Média   # facultatif, affiché sous le nom
+role: Production multimédia · gérance
+description: Une ou deux phrases.
+liens:                          # seulement ceux qui existent : site, youtube, instagram, facebook, tiktok
+  site: https://grossetete.ca/
+proprietaire: alfromega         # facultatif : « Propriété d'ALFROMEGA » (+ « Possède : … » chez lui)
+logo: ../../assets/partenaires/gt-media.jpg
+logoAlt: Logo de Grosse-Tête Média
+logoFond: '#000000'             # couleur du fond du logo (remplit le cadre) ; défaut : noir
+ordre: 30                       # petit = en premier
+---
+```
+
+« Gère : … » s'ajoute de lui-même quand un artiste ou un créateur a `partenaire: <slug>`.
+L'encadré « Géré par » de sa fiche renvoie au lien principal du partenaire
+(site, sinon YouTube, Instagram, Facebook, TikTok).
+
 ### Sous-titres (vidéos R2)
 
 Fichier WebVTT (`.vtt`) envoyé dans R2 à côté de la vidéo, puis déclaré dans la sortie :
@@ -105,6 +135,17 @@ Fichier WebVTT (`.vtt`) envoyé dans R2 à côté de la vidéo, puis déclaré d
 (`media.ostudionord.ca`) : le bucket R2 doit autoriser `https://ostudionord.ca` dans sa
 règle CORS (R2 › bucket › Settings › CORS policy, méthode `GET`), sinon les sous-titres
 ne s'affichent pas et la vidéo peut refuser de jouer.
+
+## Formulaires
+
+- **Brevo** (infolettre, beats, drop) : `src/components/FormInfolettre.astro`.
+- **Formspree** (partenariat ; contact à l'étape h) : adresses dans `src/lib/formulaires.ts`.
+  Honeypot `_gotcha`, objet du courriel `_subject`, consentement obligatoire. Aucun JavaScript.
+- **Forfait gratuit de Formspree (P1)** : 50 envois par mois ; après l'envoi, le visiteur voit
+  la page de remerciement de Formspree, pas `/merci/` (la redirection est réservée aux
+  forfaits payants et se règle dans Formspree › Settings, sans toucher au code).
+- **À revoir en P2** : garder les visiteurs sur le site après l'envoi (forfait payant de
+  Formspree ou autre service de formulaires).
 
 ## Médias
 

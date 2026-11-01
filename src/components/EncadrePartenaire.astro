@@ -1,9 +1,11 @@
 ---
 // Encadré « Géré par » d'une fiche d'artiste ou de créateur (ex. GT Média).
-// Phase : P1 (étape e) — utilisé par /artistes/[slug]/ et /createurs/[slug]/
+// Phase : P1 (étape e ; lien principal à l'étape g) — utilisé par /artistes/[slug]/ et /createurs/[slug]/
 //
-// Le nom devient un lien (nouvel onglet) si le partenaire a un `lien` dans son .md.
+// Le nom devient un lien (nouvel onglet) vers le lien principal du partenaire :
+// son site, sinon YouTube, Instagram, Facebook ou TikTok (voir src/lib/partenaires.ts).
 import type { CollectionEntry } from 'astro:content';
+import { lienPrincipal } from '../lib/partenaires';
 
 interface Props {
   partenaire: CollectionEntry<'partenaires'>;
@@ -12,7 +14,8 @@ interface Props {
 }
 
 const { partenaire, etiquette = 'Géré par' } = Astro.props;
-const { nom, description, lien } = partenaire.data;
+const { nom, description } = partenaire.data;
+const lien = lienPrincipal(partenaire);
 ---
 
 <aside class="partenaire" aria-labelledby="h-partenaire">
