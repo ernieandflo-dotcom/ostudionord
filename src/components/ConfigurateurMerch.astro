@@ -1,0 +1,378 @@
+---
+// Fiche produit du merch avec choix de couleur, de vue (devant / dos) et de taille,
+// branchée sur le formulaire Brevo « drop ». Aucun JavaScript.
+// Phase : P1 (étape f) · utilisé par /boutique/
+//
+// Comment ça marche sans JS : chaque choix est un bouton radio (choix exclusif)
+// caché visuellement mais utilisable au clavier (flèches). Son <label> sert de pastille.
+// Le CSS (:checked) affiche la bonne photo et met la pastille choisie en valeur.
+//   - Couleur : radios name="COULEUR", envoyées avec le formulaire grâce à form="form-drop".
+//   - Taille  : radios name="TAILLE", dans le formulaire (slot « avant »).
+//   - Vue     : radios sans formulaire, rien n'est envoyé.
+// Les photos cachées ont loading="lazy" : elles ne se téléchargent qu'une fois affichées.
+// Limite : 4 couleurs au maximum (voir les règles nth-of-type dans le CSS).
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import FormInfolettre from './FormInfolettre.astro';
+import { DROP_MERCH } from '../data/site';
+import { INTERETS, formaterPrix } from '../lib/boutique';
+
+interface Props {
+  produit: CollectionEntry<'merch'>;
+}
+
+const { produit } = Astro.props;
+const { nom, accroche, prix, tailles, matiere, variantes } = produit.data;
+const id = produit.id;
+const tailleParDefaut = tailles.includes('M') ? 'M' : tailles[0];
+const sousTitreCouleur = tailles.join(' · ');
+const sizes = '(min-width: 1240px) 560px, (min-width: 900px) 44vw, 92vw';
+---
+
+<div class="config">
+  <!-- Vue (rien n'est envoyé) -->
+  <input class="sr rv rv-devant" type="radio" name={`vue-${id}`} id={`${id}-devant`} checked />
+  <input class="sr rv rv-dos" type="radio" name={`vue-${id}`} id={`${id}-dos`} />
+
+  <div class="scene">
+    {
+      variantes.map((v, i) => (
+        <>
+          <input
+            class="sr rc"
+            type="radio"
+            name="COULEUR"
+            form="form-drop"
+            id={`${id}-c${i}`}
+            value={v.couleur}
+            checked={i === 0}
+            required
+          />
+          <div class="variante">
+            <span class="photo p-devant">
+              <Image
+                src={v.devant.image}
+                alt={v.devant.alt}
+                widths={[480, 800, 1120]}
+                sizes={sizes}
+                loading={i === 0 ? 'eager' : 'lazy'}
+              />
+            </span>
+            <span class="photo p-dos">
+              <Image src={v.dos.image} alt={v.dos.alt} widths={[480, 800, 1120]} sizes={sizes} loading="lazy" />
+            </span>
+          </div>
+        </>
+      ))
+    }
+
+    <div class="vues">
+      <label class="l-devant" for={`${id}-devant`}><span class="sr">Vue de </span>Devant</label>
+      <label class="l-dos" for={`${id}-dos`}><span class="sr">Vue de </span>Dos</label>
+    </div>
+
+    <div class="couleurs">
+      <p class="mono titre-choix" aria-hidden="true">Couleur</p>
+      {
+        variantes.map((v, i) => (
+          <label for={`${id}-c${i}`}>
+            <span class="vignette">
+              <Image src={v.devant.image} alt="" width={64} widths={[64, 128]} sizes="64px" />
+            </span>
+            <span>
+              <span class="sr">Couleur : </span>
+              <strong>{v.couleur}</strong>
+              {sousTitreCouleur && <span class="sous">{sousTitreCouleur}</span>}
+            </span>
+          </label>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="achat">
+    <p class="mono pastille">Drop · {DROP_MERCH.quand}</p>
+    <h2 id={`h-${id}`}>{nom}</h2>
+    {prix && <p class="prix">{formaterPrix(prix)} <span class="mono">Pas encore en vente</span></p>}
+    {accroche && <p class="accroche">{accroche}</p>}
+
+    <FormInfolettre liste="drop">
+      {
+        tailles.length > 0 && (
+          <fieldset slot="avant" class="tailles">
+            <legend class="mono titre-choix">Taille</legend>
+            <div class="grille-tailles">
+              {tailles.map((t) => (
+                <label>
+                  <input class="sr" type="radio" name="TAILLE" value={t} checked={t === tailleParDefaut} required />
+                  <span>{t}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )
+      }
+      <details slot="apres" class="interets">
+        <summary>Aide-nous à choisir les prochaines pièces (facultatif)</summary>
+        <fieldset>
+          <legend class="sr">Qu'est-ce qui te tenterait aussi ?</legend>
+          <p class="question">Qu'est-ce qui te tenterait aussi ?</p>
+          <div class="choix-interets">
+            {
+              INTERETS.map((x) => (
+                <label>
+                  <input class="sr" type="checkbox" name="INTERETS" value={x} />
+                  <span>{x}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+      </details>
+    </FormInfolettre>
+
+    <p class="note">
+      {[matiere, `Production et livraison par ${DROP_MERCH.par}`].filter(Boolean).join(' · ')}
+      {
+        DROP_MERCH.url && (
+          <>
+            {' · '}
+            <a href={DROP_MERCH.url} target="_blank" rel="noopener">
+              Page du drop<span class="sr"> (nouvel onglet)</span>
+            </a>
+          </>
+        )
+      }
+    </p>
+  </div>
+</div>
+
+<style>
+  .config {
+    position: relative;
+    display: grid;
+    gap: 18px;
+    grid-template-areas: "image" "couleurs" "achat";
+  }
+  @media (min-width: 900px) {
+    .config {
+      grid-template-columns: minmax(170px, 1fr) minmax(0, 2.4fr) minmax(280px, 1.5fr);
+      grid-template-areas: "couleurs image achat";
+      align-items: center;
+      gap: 28px;
+    }
+  }
+  /* Les enfants de .scene se placent directement dans la grille de .config. */
+  .scene { display: contents; }
+
+  /* ---------- Photo : couleur cochée + vue cochée ---------- */
+  .variante {
+    grid-area: image;
+    display: none;
+  }
+  .rc:checked + .variante { display: block; }
+  .photo :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 24px;
+    background: var(--abysse);
+  }
+  .p-dos { display: none; }
+  .rv-dos:checked ~ .scene .p-devant { display: none; }
+  .rv-dos:checked ~ .scene .p-dos { display: block; }
+
+  /* ---------- Devant / Dos, posé sur la photo ---------- */
+  .vues {
+    grid-area: image;
+    align-self: start;
+    justify-self: center;
+    z-index: 1;
+    display: inline-flex;
+    margin-top: 12px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(4, 10, 20, .85);
+    border: 1px solid var(--ligne);
+  }
+  .vues label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .rv-devant:checked ~ .scene .l-devant,
+  .rv-dos:checked ~ .scene .l-dos {
+    background: var(--glace);
+    color: var(--encre);
+  }
+  .rv-devant:focus-visible ~ .scene .l-devant,
+  .rv-dos:focus-visible ~ .scene .l-dos {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Couleurs ---------- */
+  .couleurs {
+    grid-area: couleurs;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  @media (min-width: 900px) {
+    .couleurs { grid-template-columns: 1fr; gap: 12px; }
+  }
+  .titre-choix {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 0;
+    color: var(--doux);
+  }
+  .couleurs label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 6px;
+    border-radius: 16px;
+    border: 2px solid var(--ligne);
+    background: var(--carte);
+    cursor: pointer;
+  }
+  .couleurs label:hover { border-color: var(--contour); }
+  .vignette :global(img) {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+  @media (min-width: 900px) {
+    .vignette :global(img) { width: 64px; height: 64px; }
+  }
+  .couleurs strong { display: block; }
+  .sous { display: block; color: var(--doux); font-size: .82rem; }
+  /* Pastille de la couleur cochée (une règle par position, jusqu'à 4 couleurs). */
+  .rc:nth-of-type(1):checked ~ .couleurs label:nth-of-type(1),
+  .rc:nth-of-type(2):checked ~ .couleurs label:nth-of-type(2),
+  .rc:nth-of-type(3):checked ~ .couleurs label:nth-of-type(3),
+  .rc:nth-of-type(4):checked ~ .couleurs label:nth-of-type(4) {
+    border-color: var(--cyan);
+    background: #12305a;
+  }
+  .rc:nth-of-type(1):focus-visible ~ .couleurs label:nth-of-type(1),
+  .rc:nth-of-type(2):focus-visible ~ .couleurs label:nth-of-type(2),
+  .rc:nth-of-type(3):focus-visible ~ .couleurs label:nth-of-type(3),
+  .rc:nth-of-type(4):focus-visible ~ .couleurs label:nth-of-type(4) {
+    outline: 2px solid var(--glace);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Achat ---------- */
+  .achat { grid-area: achat; min-width: 0; }
+  .pastille {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #ffb020;
+    color: var(--encre);
+    font-weight: 500;
+  }
+  .achat h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    line-height: 1;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  .prix {
+    margin: 0 0 8px;
+    font-size: 2rem;
+    font-weight: 800;
+    font-variation-settings: "wdth" 85;
+  }
+  .prix .mono { margin-left: 6px; color: var(--doux); vertical-align: middle; }
+  .accroche { margin: 0 0 16px; color: var(--doux); }
+
+  .tailles { margin: 0; padding: 0; border: 0; min-width: 0; }
+  .tailles legend { margin-bottom: 8px; }
+  .grille-tailles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .grille-tailles label { display: block; cursor: pointer; }
+  .grille-tailles span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border-radius: 12px;
+    border: 1px solid var(--contour);
+    background: var(--carte);
+    font-weight: 700;
+  }
+  .grille-tailles label:hover span { border-color: var(--glace); }
+  .grille-tailles input:checked + span {
+    background: var(--glace);
+    border-color: var(--glace);
+    color: var(--encre);
+  }
+  .grille-tailles input:focus-visible + span,
+  .choix-interets input:focus-visible + span {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+  }
+
+  .interets {
+    border-radius: 14px;
+    border: 1px dashed var(--contour);
+    padding: 0 14px;
+  }
+  .interets summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--glace);
+    font-weight: 600;
+    font-size: .92rem;
+    list-style: none;
+  }
+  .interets summary::-webkit-details-marker { display: none; }
+  .interets summary::after {
+    content: "+";
+    flex: none;
+    margin-left: auto;
+    padding-left: 12px;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  .interets[open] summary::after { content: "−"; }
+  .interets fieldset { margin: 0; padding: 0 0 14px; border: 0; min-width: 0; }
+  .question { margin: 0 0 10px; color: var(--doux); font-size: .9rem; }
+  .choix-interets { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choix-interets label { cursor: pointer; }
+  .choix-interets span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--contour);
+    font-size: .9rem;
+    font-weight: 600;
+  }
+  .choix-interets input:checked + span {
+    background: var(--glace);
+    border-color: var(--glace);
+    color: var(--encre);
+  }
+
+  .note { margin: 14px 0 0; color: var(--doux); font-size: .88rem; }
+</style>

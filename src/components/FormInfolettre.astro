@@ -1,11 +1,18 @@
 ---
 // Formulaire d'inscription Brevo (placeholder) avec consentement Loi 25.
-// Phase : P1 (étape b)
+// Phase : P1 (étape b ; liste « drop » et emplacements de champs à l'étape f)
 //
-// Deux listes, deux formulaires Brevo :
+// Trois listes, trois formulaires Brevo :
 //   - « infolettre » : sorties, épisodes, drops (bloc Infolettre de l'accueil) ;
-//   - « beats »      : un seul courriel quand les beats seront en vente (bandeau boutique).
+//   - « beats »      : un seul courriel quand les beats seront en vente (bandeau boutique) ;
+//   - « drop »       : avis du drop de merch, avec taille, couleur et intérêts (boutique).
 // Aucun JavaScript : le navigateur envoie le formulaire directement à Brevo.
+//
+// Champs en plus (liste « drop ») : deux emplacements nommés (slots).
+//   <Fragment slot="avant">…</Fragment>  au-dessus du courriel ;
+//   <Fragment slot="apres">…</Fragment>  sous le bouton, avant le consentement.
+// Un champ placé AILLEURS dans la page peut quand même être envoyé avec ce formulaire
+// grâce à l'attribut HTML form="form-drop" (l'id du formulaire est form-{liste}).
 
 // ─────────────────────────────────────────────────────────────────────────────
 // À FAIRE AVANT LE LANCEMENT : remplacer les deux adresses ci-dessous par celles
@@ -19,6 +26,9 @@
 const FORMULAIRES_BREVO = {
   infolettre: 'https://REMPLACER.sibforms.com/serve/INFOLETTRE',
   beats: 'https://REMPLACER.sibforms.com/serve/BEATS',
+  // Liste « drop » : créer aussi les attributs de contact TAILLE, COULEUR (texte)
+  // et INTERETS (choix multiples), puis vérifier leurs noms dans le code HTML de Brevo.
+  drop: 'https://REMPLACER.sibforms.com/serve/DROP',
 } as const;
 
 type Liste = keyof typeof FORMULAIRES_BREVO;
@@ -40,6 +50,11 @@ const TEXTES: Record<Liste, { bouton: string; consentement: string }> = {
     consentement:
       "J'accepte que Studio Nord m'écrive quand les beats seront en vente. Je peux me désabonner en tout temps.",
   },
+  drop: {
+    bouton: "M'avertir au drop",
+    consentement:
+      "J'accepte que Studio Nord m'écrive au sujet du drop et utilise ma taille, ma couleur et mes choix pour prévoir les quantités. Je peux me désabonner en tout temps.",
+  },
 };
 
 const { liste = 'infolettre', bouton = TEXTES[liste].bouton } = Astro.props;
@@ -53,9 +68,10 @@ if (placeholder && import.meta.env.PROD) {
 }
 
 const idCourriel = `courriel-${liste}`;
+const idForm = `form-${liste}`;
 ---
 
-<form class="form" action={action} method="POST">
+<form class="form" id={idForm} action={action} method="POST">
   {
     placeholder && import.meta.env.DEV && (
       <p class="rappel" role="note">
@@ -79,6 +95,8 @@ const idCourriel = `courriel-${liste}`;
   </div>
   <input type="hidden" name="locale" value="fr" />
 
+  <slot name="avant" />
+
   <div class="row">
     <label class="sr" for={idCourriel}>Ton courriel</label>
     <input
@@ -92,6 +110,8 @@ const idCourriel = `courriel-${liste}`;
     />
     <button class="btn btn-p" type="submit">{bouton}</button>
   </div>
+
+  <slot name="apres" />
 
   <label class="chk">
     <input type="checkbox" name="OPT_IN" value="1" required />

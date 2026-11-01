@@ -229,23 +229,40 @@ const beats = defineCollection({
 });
 
 // Merch : un .md par produit (src/content/merch/). Description facultative sous le « --- ».
-// Le drop se fait hors site (landing page de GT Média) : voir DROP_MERCH dans src/data/site.ts.
+// Le drop se fait hors site (Textilart) : voir DROP_MERCH dans src/data/site.ts.
+// Deux sortes de fiches :
+//   - un produit (statut disponible ou bientot) : `variantes` = une entrée par couleur,
+//     avec une photo de face et une de dos. La première variante est choisie par défaut.
+//   - un aperçu (statut apercu) : `visuels` = maquettes affichées dans le bandeau de la boutique.
 const TAILLES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'] as const;
 
 const merch = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/merch' }),
-  schema: ({ image }) =>
-    z
+  schema: ({ image }) => {
+    const photo = z
+      .object({ image: image(), alt: z.string().min(1, 'Texte alternatif obligatoire.') })
+      .strict();
+    return z
       .object({
         nom: z.string(),
         // disponible = en vente · bientot = montré, pas encore en vente · apercu = maquettes
         statut: z.enum(['disponible', 'bientot', 'apercu']).default('bientot'),
         accroche: z.string().optional(),
         prix: z.number().positive().optional(), // en dollars canadiens, ex. 80
-        couleurs: z.array(z.string()).default([]),
         tailles: z.array(z.enum(TAILLES)).default([]),
         matiere: z.string().optional(),
-        // Au moins un visuel ; chaque visuel a son texte alternatif.
+        variantes: z
+          .array(
+            z
+              .object({
+                couleur: z.string(), // ex. Noir (envoyé à Brevo tel quel)
+                teinte: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Couleur hexadécimale, ex. #14161a'),
+                devant: photo,
+                dos: photo,
+              })
+              .strict(),
+          )
+          .default([]),
         visuels: z
           .array(
             z
@@ -256,11 +273,20 @@ const merch = defineCollection({
               })
               .strict(),
           )
-          .min(1),
+          .default([]),
         partenaire: reference('partenaires').optional(), // ex. oela (confection)
         ordre: z.number().int().default(100),
       })
-      .strict(),
+      .strict()
+      .refine((d) => d.statut === 'apercu' || d.variantes.length > 0, {
+        message: 'Un produit (disponible ou bientot) a besoin d’au moins une variante.',
+        path: ['variantes'],
+      })
+      .refine((d) => d.statut !== 'apercu' || d.visuels.length > 0, {
+        message: 'Un aperçu (apercu) a besoin d’au moins un visuel.',
+        path: ['visuels'],
+      });
+  },
 });
 
 // Cartes-cadeaux et passes : un .md par produit (src/content/cartes-cadeaux/).

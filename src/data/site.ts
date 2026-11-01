@@ -58,13 +58,12 @@ export function media(chemin: string): string {
 
 // ---------- Boutique (étape f) ----------
 
-// Drop de merch : landing page de GT Média, hors site.
-// url à null = texte « Drop · {quand} » sans lien. Remplacer l'URL par celle de la landing page
-// du drop quand elle existera (pour l'instant : le site de GT Média).
+// Drop de merch : géré par Textilart, hors site (GT Média crée l'outil de vente).
+// url à null = « bientôt », sans lien. Mettre l'URL de la page du drop quand elle existera.
 export const DROP_MERCH: { url: string | null; quand: string; par: string } = {
-  url: 'https://grossetete.ca/',
+  url: null,
   quand: 'août 2027',
-  par: 'GT Média',
+  par: 'Textilart',
 };
 
 // Vente des licences de beats (P3, Stripe Payment Links).
