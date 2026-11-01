@@ -1,10 +1,14 @@
-// Schémas des collections de contenu (artistes, createurs, sorties, beats, partenaires).
+// Schémas des collections de contenu (artistes, createurs, sorties, beats, partenaires,
+// merch, cartesCadeaux).
 // Déclaration : defineCollection() + loader glob() (astro/loaders) + z (astro/zod).
-// Phase : P1 (étape a ; sorties revues aux étapes b, c et d ; horaire des créateurs à l'étape e)
+// Phase : P1 (étape a ; sorties revues aux étapes b, c et d ; horaire des créateurs à l'étape e ;
+// merch, cartes-cadeaux et .strict() à l'étape f)
 //
 // Un schéma décrit les champs attendus dans le frontmatter de chaque .md.
 // Champ manquant ou mal écrit = erreur claire au `npm run dev` ou au build,
 // avant que la page ne parte en ligne.
+// .strict() : un champ inconnu (faute de frappe, ex. « portait: ») provoque aussi une erreur
+// (« Unrecognized key »), au lieu d'être ignoré en silence.
 // L'identifiant d'une entrée (entry.id) est le nom du fichier : molie.md → « molie ».
 
 import { defineCollection, reference } from 'astro:content';
@@ -71,6 +75,7 @@ const partenaires = defineCollection({
         logo: image().optional(),
         logoAlt: z.string().optional(),
       })
+      .strict()
       .refine((d) => !d.logo || d.logoAlt, altObligatoire('logo')),
 });
 
@@ -91,6 +96,7 @@ const artistes = defineCollection({
         // Ordre d'affichage : petit = en premier ; à égalité (ou absent), ordre alphabétique.
         ordre: z.number().int().default(100),
       })
+      .strict()
       .refine((d) => !d.portrait || d.portraitAlt, altObligatoire('portrait')),
 });
 
@@ -122,6 +128,7 @@ const createurs = defineCollection({
         // Ordre d'affichage : petit = en premier ; à égalité (ou absent), ordre alphabétique.
         ordre: z.number().int().default(100),
       })
+      .strict()
       .refine((d) => !d.portrait || d.portraitAlt, altObligatoire('portrait')),
 });
 
@@ -170,6 +177,7 @@ const sorties = defineCollection({
         imagePartage: image().optional(),
         imagePartageAlt: z.string().optional(),
       })
+      .strict()
       .refine((d) => !(d.youtubeId && d.videoR2), {
         message: 'Choisir youtubeId OU videoR2, pas les deux.',
         path: ['videoR2'],
@@ -213,10 +221,76 @@ const beats = defineCollection({
       prix: z.number().positive().optional(),
       lienStripe: z.url().optional(),
     })
+    .strict()
     .refine((d) => d.fichier.endsWith(`/${d.numero}.mp3`), {
       message: 'Le nom du fichier doit correspondre au numéro (SNB-0001 → SNB-0001.mp3).',
       path: ['fichier'],
     }),
 });
 
-export const collections = { partenaires, artistes, createurs, sorties, beats };
+// Merch : un .md par produit (src/content/merch/). Description facultative sous le « --- ».
+// Le drop se fait hors site (landing page de GT Média) : voir DROP_MERCH dans src/data/site.ts.
+const TAILLES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'] as const;
+
+const merch = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/merch' }),
+  schema: ({ image }) =>
+    z
+      .object({
+        nom: z.string(),
+        // disponible = en vente · bientot = montré, pas encore en vente · apercu = maquettes
+        statut: z.enum(['disponible', 'bientot', 'apercu']).default('bientot'),
+        accroche: z.string().optional(),
+        prix: z.number().positive().optional(), // en dollars canadiens, ex. 80
+        couleurs: z.array(z.string()).default([]),
+        tailles: z.array(z.enum(TAILLES)).default([]),
+        matiere: z.string().optional(),
+        // Au moins un visuel ; chaque visuel a son texte alternatif.
+        visuels: z
+          .array(
+            z
+              .object({
+                image: image(),
+                alt: z.string().min(1, 'Texte alternatif obligatoire.'),
+                legende: z.string().optional(),
+              })
+              .strict(),
+          )
+          .min(1),
+        partenaire: reference('partenaires').optional(), // ex. oela (confection)
+        ordre: z.number().int().default(100),
+      })
+      .strict(),
+});
+
+// Cartes-cadeaux et passes : un .md par produit (src/content/cartes-cadeaux/).
+// genre : montant (valeur en argent) · service (équivaut à un service du studio) · pass (VIP Pass)
+// statut : disponible (commande par courriel) · bientot · masquee (pas affichée sur le site)
+const cartesCadeaux = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/cartes-cadeaux' }),
+  schema: ({ image }) =>
+    z
+      .object({
+        nom: z.string(),
+        genre: z.enum(['montant', 'service', 'pass']),
+        prix: z.number().positive(),
+        details: z.string().optional(), // phrase sous le prix
+        statut: z.enum(['disponible', 'bientot', 'masquee']).default('bientot'),
+        visuel: image().optional(),
+        visuelAlt: z.string().optional(),
+        lienStripe: z.url().optional(), // P3, si on vend en ligne
+        ordre: z.number().int().default(100),
+      })
+      .strict()
+      .refine((d) => !d.visuel || d.visuelAlt, altObligatoire('visuel')),
+});
+
+export const collections = {
+  partenaires,
+  artistes,
+  createurs,
+  sorties,
+  beats,
+  merch,
+  cartesCadeaux,
+};

@@ -55,3 +55,19 @@ export const MEDIA_URL = (import.meta.env.PUBLIC_MEDIA_URL || '/media').replace(
 export function media(chemin: string): string {
   return `${MEDIA_URL}/${chemin.replace(/^\/+/, '')}`;
 }
+
+// ---------- Boutique (étape f) ----------
+
+// Drop de merch : landing page de GT Média, hors site.
+// url à null = texte « Drop · {quand} » sans lien. Remplacer l'URL par celle de la landing page
+// du drop quand elle existera (pour l'instant : le site de GT Média).
+export const DROP_MERCH: { url: string | null; quand: string; par: string } = {
+  url: 'https://grossetete.ca/',
+  quand: 'août 2027',
+  par: 'GT Média',
+};
+
+// Vente des licences de beats (P3, Stripe Payment Links).
+// Tant que c'est false, aucun bouton d'achat ne s'affiche, même si un beat a déjà
+// un `prix` et un `lienStripe` dans son .md. Passer à true le jour du lancement des ventes.
+export const VENTES_BEATS = false;

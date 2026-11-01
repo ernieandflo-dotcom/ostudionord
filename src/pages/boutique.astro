@@ -1,4 +1,612 @@
 ---
-// Boutique : merch (lien vers le drop GT Média), beats (écoute + M'informer), cartes-cadeaux.
+// Boutique : merch (vitrine + lien vers le drop de GT Média), beats (écoute + M'informer),
+// cartes-cadeaux et VIP Pass (commande par courriel).
 // Phase : P1 → P3 (étape f)
+//
+// Les produits viennent des collections `merch` et `cartesCadeaux` (src/content/),
+// les beats de la collection `beats`. Réglages : DROP_MERCH et VENTES_BEATS dans src/data/site.ts.
+// Aucun JavaScript propre à la page : seuls les lecteurs de beats sont des îlots.
+import { getCollection, getEntry, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Page from '../layouts/Page.astro';
+import ListeBeats from '../components/ListeBeats.astro';
+import FormInfolettre from '../components/FormInfolettre.astro';
+import { COURRIEL, DISCORD, DROP_MERCH } from '../data/site';
+import { parOrdre } from '../lib/personnes';
+import { STATUTS_MERCH, formaterPrix, lienCommande } from '../lib/boutique';
+import imagePartage from '../assets/merch/merch_Hoodie001-black-f.avif';
+
+// ---------- Merch ----------
+const alpha = new Intl.Collator('fr-CA', { sensitivity: 'base', numeric: true });
+
+const produits = await Promise.all(
+  (await getCollection('merch'))
+    .sort((a, b) => a.data.ordre - b.data.ordre || alpha.compare(a.data.nom, b.data.nom))
+    .map(async (p) => ({
+      p,
+      Description: (await render(p)).Content,
+      partenaire: p.data.partenaire ? await getEntry(p.data.partenaire) : undefined,
+    })),
+);
+
+// ---------- Beats : un groupe par beatmaker (ordre : parOrdre) ----------
+const beats = await getCollection('beats');
+const groupes = (
+  await getCollection('artistes', (a) => beats.some((b) => b.data.beatmaker.id === a.id))
+)
+  .sort(parOrdre)
+  .map((bm) => ({ bm, beats: beats.filter((b) => b.data.beatmaker.id === bm.id) }));
+
+// ---------- Cartes-cadeaux et passes (les « masquee » ne sont pas affichées) ----------
+const cartes = (await getCollection('cartesCadeaux', (c) => c.data.statut !== 'masquee')).sort(
+  (a, b) => a.data.ordre - b.data.ordre || a.data.prix - b.data.prix,
+);
+const montants = cartes.filter((c) => c.data.genre !== 'pass');
+const passes = cartes.filter((c) => c.data.genre === 'pass');
+
+const sommaire = [
+  { href: '#merch', label: 'Merch', actif: produits.length > 0 },
+  { href: '#beats', label: 'Beats', actif: groupes.length > 0 },
+  { href: '#cartes-cadeaux', label: 'Cartes-cadeaux', actif: montants.length > 0 },
+  { href: `#${passes[0]?.id}`, label: 'VIP Pass', actif: passes.length > 0 },
+].filter((s) => s.actif);
 ---
+
+<Page
+  title="Boutique"
+  surtitre="Porte l'univers"
+  intro="Merch, beats, cartes-cadeaux et VIP Pass Studio Nord. Chaque achat finance le prochain tournage."
+  description="Boutique Studio Nord : hoodies et merch Bluestorm, beats de nos beatmakers à écouter, cartes-cadeaux et VIP Pass pour nos événements à Québec."
+  image={imagePartage}
+  imageAlt="Hoodie Studio Nord noir, vu de face"
+  partageCarre
+>
+  <nav class="sommaire" aria-label="Sections de la boutique">
+    <div class="wrap">
+      <ul role="list">
+        {
+          sommaire.map((s) => (
+            <li>
+              <a class="chip" href={s.href}>
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═════════ MERCH ═════════ -->
+  {
+    produits.length > 0 && (
+      <section id="merch" class="ancre sec" aria-labelledby="h-merch">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">Univers Bluestorm</span>
+              <h2 id="h-merch">Merch</h2>
+            </div>
+          </div>
+
+          <div class="produits">
+            {produits.map(({ p, Description, partenaire }) => {
+              const d = p.data;
+              const apercu = d.statut === 'apercu';
+              return (
+                <article class:list={['produit', { apercu }]} aria-labelledby={`h-${p.id}`}>
+                  <div class="infos">
+                    <p class:list={['pastille', `st-${d.statut}`]}>{STATUTS_MERCH[d.statut]}</p>
+                    <h3 id={`h-${p.id}`}>{d.nom}</h3>
+                    {d.accroche && <p class="accroche">{d.accroche}</p>}
+                    <div class="desc">
+                      <Description />
+                    </div>
+                    {d.prix && <p class="prix">{formaterPrix(d.prix)}</p>}
+                    {(d.couleurs.length > 0 || d.tailles.length > 0 || d.matiere) && (
+                      <dl class="specs">
+                        {d.couleurs.length > 0 && (
+                          <div>
+                            <dt>Couleurs</dt>
+                            <dd>{d.couleurs.join(' · ')}</dd>
+                          </div>
+                        )}
+                        {d.tailles.length > 0 && (
+                          <div>
+                            <dt>Tailles</dt>
+                            <dd>{d.tailles.join(' · ')}</dd>
+                          </div>
+                        )}
+                        {d.matiere && (
+                          <div>
+                            <dt>Matière</dt>
+                            <dd>{d.matiere}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    )}
+                    {partenaire && (
+                      <p class="confection">
+                        Confection :{' '}
+                        {partenaire.data.lien ? (
+                          <a href={partenaire.data.lien} target="_blank" rel="noopener">
+                            {partenaire.data.nom}
+                            <span class="sr"> (nouvel onglet)</span>
+                          </a>
+                        ) : (
+                          partenaire.data.nom
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  <ul class="galerie" role="list">
+                    {d.visuels.map((v) => (
+                      <li>
+                        <figure>
+                          <Image
+                            src={v.image}
+                            alt={v.alt}
+                            width={600}
+                            widths={[300, 600]}
+                            sizes={
+                              apercu
+                                ? '(min-width: 1240px) 390px, (min-width: 800px) 31vw, 45vw'
+                                : '(min-width: 1240px) 290px, (min-width: 900px) 23vw, 45vw'
+                            }
+                          />
+                          {v.legende && <figcaption class="mono">{v.legende}</figcaption>}
+                        </figure>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })}
+          </div>
+
+          <div class="drop">
+            <div>
+              <span class="mono">Premier drop · {DROP_MERCH.quand}</span>
+              <h3>Le drop se passe chez {DROP_MERCH.par}</h3>
+              <p>
+                Le merch Studio Nord sera vendu lors d'un drop en ligne piloté par {DROP_MERCH.par}.
+                Les pièces et la date exacte seront annoncées dans l'infolettre et sur{' '}
+                <a href={DISCORD} target="_blank" rel="noopener">
+                  Discord<span class="sr"> (nouvel onglet)</span>
+                </a>.
+              </p>
+            </div>
+            <div class="actions">
+              {DROP_MERCH.url ? (
+                <a class="btn btn-p" href={DROP_MERCH.url} target="_blank" rel="noopener">
+                  Suivre le drop chez {DROP_MERCH.par}
+                  <span class="sr"> (nouvel onglet)</span>
+                </a>
+              ) : (
+                <p class="mono bientot">Drop · {DROP_MERCH.quand}</p>
+              )}
+              <a class="btn btn-g" href="/#infolettre">
+                M'abonner à l'infolettre
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ═════════ BEATS ═════════ -->
+  {
+    groupes.length > 0 && (
+      <section id="beats" class="ancre sec sec-beats" aria-labelledby="h-beats">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">Écoute intégrale</span>
+              <h2 id="h-beats">Beats</h2>
+            </div>
+          </div>
+          <p class="chapeau">
+            Les instrus de nos beatmakers, à écouter en entier. Les licences arrivent bientôt.
+          </p>
+
+          {groupes.map(({ bm, beats: liste }, i) => (
+            <div class="groupe">
+              <div class="groupe-h">
+                <h3>{bm.data.nom}</h3>
+                <a class="lien" href={`/artistes/${bm.id}/`}>
+                  Voir la fiche de {bm.data.nom} <span aria-hidden="true">→</span>
+                </a>
+              </div>
+              <ListeBeats beats={liste} avis={i === groupes.length - 1} />
+            </div>
+          ))}
+
+          <div class="avertir">
+            <h3>M'avertir quand les licences seront disponibles</h3>
+            <FormInfolettre liste="beats" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ═════════ CARTES-CADEAUX + VIP PASS ═════════ -->
+  {
+    cartes.length > 0 && (
+      <section id="cartes-cadeaux" class="ancre sec" aria-labelledby="h-cartes">
+        <div class="wrap">
+          <div class="sec-h">
+            <div>
+              <span class="mono">À offrir</span>
+              <h2 id="h-cartes">Cartes-cadeaux</h2>
+            </div>
+          </div>
+
+          {montants.length > 0 && (
+            <ul class="cartes" role="list">
+              {montants.map((c) => {
+                const d = c.data;
+                return (
+                  <li class="carte">
+                    {d.visuel && (
+                      <Image
+                        src={d.visuel}
+                        alt={d.visuelAlt ?? ''}
+                        width={600}
+                        widths={[300, 600]}
+                        sizes="(min-width: 1240px) 390px, (min-width: 800px) 31vw, 45vw"
+                      />
+                    )}
+                    <div class="carte-c">
+                      <h3>
+                        <span class="sr">Carte-cadeau de </span>
+                        {formaterPrix(d.prix)}
+                      </h3>
+                      {d.details && <p class="details">{d.details}</p>}
+                      {d.statut === 'disponible' ? (
+                        <a class="btn btn-p" href={lienCommande(d.nom)}>
+                          Commander<span class="sr"> : {d.nom}, par courriel</span>
+                        </a>
+                      ) : (
+                        <p class="pastille st-bientot">Bientôt disponible</p>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <div class="infos-cartes">
+            <div class="bloc">
+              <h3>Comment commander</h3>
+              <ol>
+                <li>Clique sur « Commander » : ton application de courriel s'ouvre avec un message prêt à envoyer.</li>
+                <li>On te répond avec les détails du paiement.</li>
+                <li>On te remet la carte, ou directement à la personne à qui tu l'offres.</li>
+              </ol>
+              <p class="note">
+                Le bouton ne s'ouvre pas ? Écris-nous à <a href={`mailto:${COURRIEL}`}>{COURRIEL}</a>.
+              </p>
+            </div>
+            <div class="bloc">
+              <h3>Conditions</h3>
+              <ul>
+                <li>Aucune date d'expiration.</li>
+                <li>Utilisable sur le merch et les autres produits Studio Nord.</li>
+                <li>Si le prix d'un produit a changé, tu paies la différence.</li>
+                <li>Si un produit n'existe plus, sa valeur sert pour un autre produit.</li>
+                <li>
+                  Non monnayable : non échangeable contre de l'argent, sauf exception prévue par la
+                  loi.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {passes.map((c) => {
+            const d = c.data;
+            return (
+              <article id={c.id} class="ancre vip" aria-labelledby={`h-${c.id}`}>
+                {d.visuel ? (
+                  <Image
+                    class="vip-img"
+                    src={d.visuel}
+                    alt={d.visuelAlt ?? ''}
+                    width={600}
+                    widths={[300, 600]}
+                    sizes="(min-width: 800px) 360px, 90vw"
+                  />
+                ) : (
+                  <div class="vip-carte" aria-hidden="true">
+                    <span class="mono">Studio Nord</span>
+                    <strong>{d.nom}</strong>
+                    <span class="mono">Valide 1 an</span>
+                  </div>
+                )}
+                <div class="vip-infos">
+                  <span class="mono">Nouveau · événements</span>
+                  <h3 id={`h-${c.id}`}>{d.nom}</h3>
+                  {d.details && <p>{d.details}</p>}
+                  <p class="prix">
+                    {formaterPrix(d.prix)} <span class="mono">Prix de lancement</span>
+                  </p>
+                  <ul class="vip-liste">
+                    <li>Valide un an.</li>
+                    <li>Les événements sont annoncés dans l'infolettre et sur Discord.</li>
+                    <li>Se donne aussi en cadeau.</li>
+                  </ul>
+                  {d.statut === 'disponible' ? (
+                    <a class="btn btn-p" href={lienCommande(d.nom)}>
+                      Commander le {d.nom}
+                      <span class="sr"> par courriel</span>
+                    </a>
+                  ) : (
+                    <p class="pastille st-bientot">Bientôt disponible</p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    )
+  }
+</Page>
+
+<style>
+  /* Le titre d'une section ne se cache pas sous l'en-tête collant après un clic sur une ancre. */
+  .ancre { scroll-margin-top: 80px; }
+
+  .sec { padding: 40px 0; }
+
+  /* ---------- Sommaire ---------- */
+  .sommaire { padding: 18px 0 0; }
+  .sommaire ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sommaire .chip { text-decoration: none; }
+  .sommaire .chip:hover { border-color: var(--glace); }
+
+  /* ---------- Pastilles de statut ---------- */
+  .pastille {
+    display: inline-block;
+    margin: 0 0 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--ligne);
+    color: var(--glace);
+    font: 500 .72rem/1.3 var(--mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .st-disponible { background: var(--cyan); border-color: var(--cyan); color: var(--encre); }
+  .st-apercu { border-style: dashed; color: var(--doux); }
+
+  .prix {
+    margin: 0 0 14px;
+    font-size: 1.7rem;
+    font-weight: 800;
+    font-variation-settings: "wdth" 85;
+  }
+  .prix .mono { margin-left: 6px; color: var(--cyan); vertical-align: middle; }
+
+  /* ---------- Merch ---------- */
+  .produits { display: grid; gap: 28px; }
+  .produit {
+    display: grid;
+    gap: 20px;
+    padding: 18px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  @media (min-width: 900px) {
+    .produit:not(.apercu) {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: center;
+      padding: 28px;
+    }
+    .produit.apercu { padding: 28px; }
+  }
+  /* Produit : photos d'abord (à gauche sur grand écran). Maquettes : texte d'abord. */
+  .produit:not(.apercu) .galerie { order: -1; }
+  .produit h3 {
+    margin: 0 0 8px;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-variation-settings: "wdth" 82;
+  }
+  .accroche { margin: 0 0 10px; color: var(--doux); }
+  .desc { color: var(--doux); }
+  .desc :global(p) { margin: 0 0 10px; }
+  .desc:empty { display: none; }
+
+  .specs {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+  .specs div { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .specs dt {
+    min-width: 6.5rem;
+    color: var(--cyan);
+    font: 500 .76rem/1.9 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .specs dd { margin: 0; }
+  .confection { margin: 14px 0 0; color: var(--doux); }
+
+  .galerie {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 800px) {
+    .apercu .galerie { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  figure { margin: 0; }
+  figure :global(img) {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 14px;
+    background: var(--abysse);
+  }
+  figcaption {
+    margin-top: 6px;
+    color: var(--doux);
+    font-size: .7rem;
+  }
+
+  .drop {
+    display: grid;
+    gap: 18px;
+    margin-top: 28px;
+    padding: 22px;
+    border-radius: var(--r);
+    background: linear-gradient(120deg, var(--marine), var(--abysse));
+  }
+  @media (min-width: 900px) {
+    .drop { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 32px; }
+  }
+  .drop .mono { color: var(--glace); }
+  .drop h3 {
+    margin: 6px 0 8px;
+    font-size: clamp(1.4rem, 3.5vw, 2rem);
+    font-variation-settings: "wdth" 82;
+  }
+  .drop p { margin: 0; color: var(--doux); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .bientot {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    margin: 0;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px dashed var(--contour);
+  }
+
+  /* ---------- Beats ---------- */
+  .sec-beats { background: var(--abysse); }
+  .chapeau { margin: -8px 0 22px; max-width: 40rem; color: var(--doux); }
+  .groupe + .groupe { margin-top: 28px; }
+  .groupe-h {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px 16px;
+    margin-bottom: 12px;
+  }
+  .groupe-h h3 { margin: 0; font-size: 1.3rem; }
+  .avertir { max-width: 40rem; margin-top: 28px; }
+  .avertir h3 { margin: 0 0 12px; font-size: 1.1rem; }
+
+  /* ---------- Cartes-cadeaux ---------- */
+  .cartes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 800px) {
+    .cartes { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  }
+  .carte {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .carte :global(img) { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .carte-c {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+  }
+  .carte h3 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+  .carte .details { margin: 0; color: var(--doux); font-size: .92rem; }
+  .carte .btn { margin-top: auto; }
+  .carte .pastille { margin: auto 0 0; }
+
+  .infos-cartes {
+    display: grid;
+    gap: 14px;
+    margin-top: 22px;
+  }
+  @media (min-width: 800px) {
+    .infos-cartes { grid-template-columns: 1fr 1fr; }
+  }
+  .bloc {
+    padding: 18px 20px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+  }
+  .bloc h3 { margin: 0 0 10px; font-size: 1.1rem; }
+  .bloc ol, .bloc ul { margin: 0; padding-left: 1.2rem; color: var(--doux); }
+  .bloc li + li { margin-top: 6px; }
+  .note { margin: 12px 0 0; color: var(--doux); font-size: .9rem; overflow-wrap: anywhere; }
+
+  /* ---------- VIP Pass ---------- */
+  .vip {
+    display: grid;
+    gap: 22px;
+    margin-top: 40px;
+    padding: 22px;
+    border-radius: var(--r);
+    border: 1px solid var(--cyan);
+    background: linear-gradient(140deg, var(--abysse), var(--carte));
+  }
+  @media (min-width: 800px) {
+    .vip { grid-template-columns: 360px minmax(0, 1fr); align-items: center; padding: 32px; gap: 36px; }
+  }
+  .vip-carte {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    aspect-ratio: 1.586; /* format carte de crédit */
+    padding: 18px 20px;
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(193, 232, 255, .35), transparent 40%),
+      linear-gradient(135deg, var(--logo), var(--marine) 60%, var(--nuit));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+  }
+  .vip-carte .mono { color: var(--glace); }
+  .vip-carte strong {
+    font-size: clamp(2rem, 9vw, 3rem);
+    line-height: 1;
+    font-weight: 800;
+    font-variation-settings: "wdth" 78;
+  }
+  .vip :global(.vip-img) { width: 100%; height: auto; border-radius: 16px; }
+  .vip-infos > .mono { color: var(--cyan); }
+  .vip h3 {
+    margin: 6px 0 8px;
+    font-size: clamp(1.7rem, 4.5vw, 2.6rem);
+    font-variation-settings: "wdth" 82;
+  }
+  .vip-infos p { margin: 0 0 12px; color: var(--doux); }
+  .vip-infos .prix { color: var(--texte); }
+  .vip-liste { margin: 0 0 18px; padding-left: 1.2rem; color: var(--doux); }
+  .vip-liste li + li { margin-top: 4px; }
+</style>

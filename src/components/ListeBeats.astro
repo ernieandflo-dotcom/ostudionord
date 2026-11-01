@@ -1,15 +1,23 @@
 ---
 // Liste de beats (LecteurBeat) + avis de licence.
-// Phase : P1 (étape d) — réutilisée par la boutique (étape f)
+// Phase : P1 (étape d) · réutilisée par la boutique (étape f) · achat Stripe en P3
 //
 // Les beats sont triés par numéro (SNB-0001, SNB-0002…).
+// Bouton d'achat (P3) : affiché seulement si VENTES_BEATS est à true (src/data/site.ts)
+// ET que le beat a un `prix` et un `lienStripe` dans son .md. En P1, rien ne s'affiche.
+// P3 : penser à réécrire l'avis ci-dessous quand les licences seront en vente.
 import type { CollectionEntry } from 'astro:content';
 import LecteurBeat from './LecteurBeat.astro';
+import { VENTES_BEATS } from '../data/site';
+import { formaterPrix } from '../lib/boutique';
 
 interface Props {
   beats: CollectionEntry<'beats'>[];
+  /** Afficher l'avis de licence sous la liste (false si la page l'affiche ailleurs). */
+  avis?: boolean;
 }
 
+const { avis = true } = Astro.props;
 const beats = [...Astro.props.beats].sort((a, b) => a.data.numero.localeCompare(b.data.numero));
 ---
 
@@ -20,15 +28,23 @@ const beats = [...Astro.props.beats].sort((a, b) => a.data.numero.localeCompare(
         {beats.map((beat) => (
           <li>
             <LecteurBeat beat={beat} />
+            {VENTES_BEATS && beat.data.prix && beat.data.lienStripe && (
+              <a class="btn btn-g achat" href={beat.data.lienStripe} target="_blank" rel="noopener">
+                Acheter la licence · {formaterPrix(beat.data.prix)}
+                <span class="sr"> ({beat.data.titre}, nouvel onglet)</span>
+              </a>
+            )}
           </li>
         ))}
       </ol>
 
-      <p class="avis" role="note">
-        <strong>Écoute seulement.</strong> Ces beats ne sont pas libres de droits : les
-        enregistrer, les publier ou les monétiser exige une licence. Abonne-toi à l'infolettre pour
-        savoir quand les licences seront disponibles.
-      </p>
+      {avis && (
+        <p class="avis" role="note">
+          <strong>Écoute seulement.</strong> Ces beats ne sont pas libres de droits : les
+          enregistrer, les publier ou les monétiser exige une licence. Abonne-toi à l'infolettre
+          pour savoir quand les licences seront disponibles.
+        </p>
+      )}
     </div>
   )
 }
@@ -43,6 +59,11 @@ const beats = [...Astro.props.beats].sort((a, b) => a.data.numero.localeCompare(
   }
   @media (min-width: 800px) {
     .beats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .achat {
+    min-height: 40px;
+    margin-top: 6px;
+    font-size: .88rem;
   }
   .avis {
     margin: 16px 0 0;
