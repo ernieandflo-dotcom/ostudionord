@@ -18,6 +18,10 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 - [ ] **Formspree** : créer les formulaires « Partenariat » et « Contact », puis remplacer
       `REMPLACER_PARTENARIAT` et `REMPLACER_CONTACT` dans `src/lib/formulaires.ts`
       (voir « Formulaires » plus bas).
+- [ ] **Brevo, liste « drop »** : si l'attribut `INTERETS` est à choix multiples, y ajouter
+      la valeur « Autre vêtement » (écrite exactement pareil).
+- [ ] **VIP Pass** : choisir le mode du compteur (voir « VIP Pass : places restantes »).
+      Par défaut, mode manuel (`quota: 25`, `vendus: 0`).
 - [ ] **À propos** : relire les textes de `src/pages/a-propos/index.astro`, puis passer
       `TEXTES_A_VALIDER` à `false`. Tant que ce n'est pas fait, `npm run build` affiche
       « textes de /a-propos/ en brouillon ».
@@ -150,6 +154,44 @@ Réponse en Markdown, avec un [lien](/a-propos/contact/).
 Titres et ordre des catégories : `src/lib/faq.ts` (`CATEGORIES_FAQ`, `TITRES_CATEGORIES`).
 Les données structurées FAQPage (JSON-LD) se génèrent d'elles-mêmes.
 Ne pas renommer `reserver.md` : c'est la cible de la redirection de `booking.html`.
+
+### VIP Pass : places restantes
+
+Le quota (25) n'est jamais affiché ; la boutique affiche « Il n'en reste que N », puis
+« Complet » (bouton retiré). Deux modes, choisis tout seuls au build :
+
+**Mode manuel** (par défaut) : commande par courriel. Dans
+`src/content/cartes-cadeaux/vip-pass.md`, augmenter `vendus` après chaque vente confirmée,
+puis pousser. `vendus` plus grand que `quota` = erreur claire au build.
+
+**Mode automatique** (Stripe) : paiement par carte sur la page de Stripe ; le compteur se met
+à jour seul après chaque vente (une à deux minutes). À faire une seule fois (les chemins des
+menus peuvent varier légèrement) :
+
+1. **Stripe** › Catalogue de produits : créer « VIP Pass » à 100 $ CAD.
+2. **Stripe** › Payment Links › Nouveau lien pour ce produit : cocher
+   « Limit the number of payments » (limiter le nombre de paiements) = **25**, personnaliser
+   le message du lien désactivé (ex. « Les VIP Pass sont tous partis ! »). Après le paiement :
+   rediriger vers `https://ostudionord.ca/merci/`. Copier l'URL du lien (`https://buy.stripe.com/…`).
+3. **Stripe** › Développeurs › Clés API › **Créer une clé restreinte** : permission
+   « Payment Links » en **lecture** seulement, tout le reste à « Aucun ». Copier la clé (`rk_live_…`).
+4. **Cloudflare Pages** › projet › Settings › Variables and secrets : ajouter
+   `STRIPE_CLE_LECTURE` (type **Secret**, environnement Production) avec cette clé.
+5. **Cloudflare Pages** › Settings › Builds › **Deploy hooks** : créer un hook pour la branche
+   `main` et copier son URL (c'est un secret : ne jamais la mettre dans le dépôt).
+6. **Stripe** › Développeurs › **Webhooks** › Ajouter une destination : coller l'URL du deploy
+   hook, événement `checkout.session.completed`. Chaque vente relance ainsi le build.
+7. Dans `vip-pass.md`, décommenter `lienStripe:` avec l'URL de l'étape 2, puis pousser.
+
+Le build lit la limite et le nombre de paiements du lien chez Stripe (une requête depuis le
+serveur de build, jamais depuis le navigateur des visiteurs). Si Stripe ne répond pas ou si le
+lien n'a pas de limite, `npm run build` affiche un avertissement et revient au mode manuel.
+
+- **Vente hors Stripe** (comptant, événement) : baisser la limite du lien dans Stripe d'une
+  unité, puis relancer un build (Cloudflare › Deployments › Retry deployment, ou
+  `curl -X POST "<URL du deploy hook>"`). Ne pas toucher `vendus` en mode automatique.
+- **Tester en local** : mettre la clé dans `.env` (jamais commité), puis `npm run build`.
+- **Confidentialité** : Stripe (États-Unis) traite le paiement ; mentionné dans `/confidentialite/`.
 
 ### Sous-titres (vidéos R2)
 

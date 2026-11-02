@@ -15,7 +15,13 @@ import ListeBeats from '../components/ListeBeats.astro';
 import FormInfolettre from '../components/FormInfolettre.astro';
 import { COURRIEL, DROP_MERCH } from '../data/site';
 import { genresEnTexte, parOrdre } from '../lib/personnes';
-import { carteQuiCouvre, formaterPrix, lienCommande } from '../lib/boutique';
+import {
+  carteQuiCouvre,
+  formaterPrix,
+  lienCommande,
+  placesRestantes,
+  texteRestants,
+} from '../lib/boutique';
 import imagePartage from '../assets/merch/merch_Hoodie001-black-f.avif';
 
 // ---------- Merch ----------
@@ -47,7 +53,11 @@ const cartes = (await getCollection('cartesCadeaux', (c) => c.data.statut !== 'm
   (a, b) => a.data.ordre - b.data.ordre || a.data.prix - b.data.prix,
 );
 const montants = cartes.filter((c) => c.data.genre !== 'pass');
-const passes = cartes.filter((c) => c.data.genre === 'pass');
+const passes = await Promise.all(
+  cartes
+    .filter((c) => c.data.genre === 'pass')
+    .map(async (c) => ({ c, places: await placesRestantes(c) })),
+);
 
 // Suggestion « C'est pour offrir ? » : plus petite carte qui couvre le premier produit.
 const prixProduit = produits[0]?.data.prix;
@@ -56,7 +66,7 @@ const carteSuggeree = prixProduit ? carteQuiCouvre(prixProduit, cartes) : undefi
 const onglets = [
   { href: '#merch', court: 'Merch', long: 'Merch', actif: produits.length > 0 },
   { href: '#beats', court: 'Beats', long: 'Beats', actif: groupes.length > 0 },
-  { href: `#${passes[0]?.id}`, court: 'VIP', long: 'VIP Pass', actif: passes.length > 0 },
+  { href: `#${passes[0]?.c.id}`, court: 'VIP', long: 'VIP Pass', actif: passes.length > 0 },
   { href: '#cartes-cadeaux', court: 'Cartes', long: 'Cartes-cadeaux', actif: montants.length > 0 },
 ].filter((o) => o.actif);
 ---
@@ -200,8 +210,11 @@ const onglets = [
     cartes.length > 0 && (
       <section class="sec" aria-label="À offrir">
         <div class="wrap">
-          {passes.map((c) => {
+          {passes.map(({ c, places }) => {
             const d = c.data;
+            // Quota (étape h.1) : « Il n'en reste que N », ou « Complet » à 0.
+            const complet = places !== undefined && places.restants <= 0;
+            const enVente = d.statut === 'disponible' && !complet;
             return (
               <article id={c.id} class="ancre vip" aria-labelledby={`h-${c.id}`}>
                 <div class="vip-txt">
@@ -214,13 +227,28 @@ const onglets = [
                 <div class="vip-achat">
                   <p class="vip-prix">{formaterPrix(d.prix)}</p>
                   <p class="mono">Prix de lancement</p>
-                  {d.statut === 'disponible' ? (
-                    <a class="btn blanc" href={lienCommande(d.nom)}>
-                      Commander le {d.nom}
-                      <span class="sr"> par courriel</span>
+                  {d.statut === 'disponible' && places && !complet && (
+                    <p class="restants">{texteRestants(places.restants)}</p>
+                  )}
+                  {complet ? (
+                    <p class="mono bientot">Complet</p>
+                  ) : !enVente ? (
+                    <p class="mono bientot">Bientôt disponible</p>
+                  ) : d.lienStripe ? (
+                    <a class="btn blanc" href={d.lienStripe} target="_blank" rel="noopener">
+                      Acheter le {d.nom}
+                      <span class="sr"> (paiement sécurisé par Stripe, nouvel onglet)</span>
                     </a>
                   ) : (
-                    <p class="mono bientot">Bientôt disponible</p>
+                    <>
+                      <a class="btn blanc" href={lienCommande(d.nom)}>
+                        Commander le {d.nom}
+                        <span class="sr"> par courriel</span>
+                      </a>
+                      {places && (
+                        <p class="confirm">On te confirme la disponibilité par courriel.</p>
+                      )}
+                    </>
                   )}
                 </div>
               </article>
@@ -468,6 +496,16 @@ const onglets = [
   .vip-achat .mono { margin: 0 0 8px; color: var(--glace); }
   .vip-prix { margin: 0; font-size: 2.6rem; font-weight: 800; line-height: 1; }
   .bientot { padding: 10px 16px; border-radius: 999px; border: 1px dashed var(--glace); }
+  .restants {
+    margin: 0 0 10px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--glace);
+    color: var(--encre);
+    font-weight: 700;
+    font-size: .95rem;
+  }
+  .confirm { margin: 4px 0 0; color: #e1eef8; font-size: .85rem; }
 
   /* ---------- Cartes-cadeaux ---------- */
   .cartes-bloc { margin-top: 44px; }

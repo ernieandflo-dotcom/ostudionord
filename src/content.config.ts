@@ -334,11 +334,23 @@ const cartesCadeaux = defineCollection({
         statut: z.enum(['disponible', 'bientot', 'masquee']).default('bientot'),
         visuel: image().optional(),
         visuelAlt: z.string().optional(),
-        lienStripe: z.url().optional(), // P3, si on vend en ligne
+        // Lien de paiement Stripe (https://buy.stripe.com/…) : bouton « Acheter » au lieu de
+        // « Commander » par courriel. Avec STRIPE_CLE_LECTURE, les places restantes viennent
+        // de Stripe (limite du lien), lues au build. Voir le README, « VIP Pass ».
+        lienStripe: z.url().optional(),
+        // Quota (étape h.1) : nombre total d'exemplaires, jamais affiché. Sert au compteur
+        // « Il n'en reste que N » quand Stripe ne donne pas le compte (repli manuel).
+        quota: z.number().int().positive().optional(),
+        // Mode manuel seulement : exemplaires vendus, à augmenter après chaque vente.
+        vendus: z.number().int().min(0).default(0),
         ordre: z.number().int().default(100),
       })
       .strict()
-      .refine((d) => !d.visuel || d.visuelAlt, altObligatoire('visuel')),
+      .refine((d) => !d.visuel || d.visuelAlt, altObligatoire('visuel'))
+      .refine((d) => d.quota === undefined || d.vendus <= d.quota, {
+        message: 'vendus ne peut pas dépasser quota.',
+        path: ['vendus'],
+      }),
 });
 
 // FAQ (page /a-propos/faq/). Un .md par question ; la réponse s'écrit en Markdown
