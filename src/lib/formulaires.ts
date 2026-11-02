@@ -6,8 +6,8 @@
 // À FAIRE AVANT LE LANCEMENT : créer chaque formulaire dans Formspree
 // (Formspree › New form), puis remplacer l'adresse ci-dessous par celle qu'il donne,
 // de la forme https://formspree.io/f/xxxxxxxx.
-// Tant qu'une adresse contient « REMPLACER », un rappel s'affiche dans `npm run dev`
-// et un avertissement dans la console de `npm run build`.
+// Tant qu'une adresse contient « REMPLACER », un avertissement s'affiche dans la
+// console de `npm run build` (rien sur la page).
 //
 // Forfait gratuit (P1) : après l'envoi, le visiteur voit la page de remerciement de Formspree.
 // La redirection vers /merci/ est un réglage de Formspree (Settings) réservé aux forfaits
@@ -21,7 +21,7 @@ export const FORMSPREE = {
 
 export type FormulaireFormspree = keyof typeof FORMSPREE;
 
-/** true tant que l'adresse est un placeholder ; avertit dans la console du build. */
+/** true tant que l'adresse est un placeholder ; avertit dans la console du build (pas sur la page). */
 export function estPlaceholder(nom: FormulaireFormspree): boolean {
   const placeholder = FORMSPREE[nom].includes('REMPLACER');
   if (placeholder && import.meta.env.PROD) {

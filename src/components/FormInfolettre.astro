@@ -21,7 +21,7 @@
 // Vérifier aussi les noms des champs (EMAIL, OPT_IN, email_address_check, locale)
 // avec le code HTML fourni par Brevo, et régler la redirection vers /merci/.
 // Tant qu'une adresse contient « REMPLACER », un avertissement s'affiche
-// dans `npm run dev` et dans la console de `npm run build`.
+// dans la console de `npm run build` (rien sur la page).
 // ─────────────────────────────────────────────────────────────────────────────
 const FORMULAIRES_BREVO = {
   infolettre: 'https://REMPLACER.sibforms.com/serve/INFOLETTRE',
@@ -72,14 +72,6 @@ const idForm = `form-${liste}`;
 ---
 
 <form class="form" id={idForm} action={action} method="POST">
-  {
-    placeholder && import.meta.env.DEV && (
-      <p class="rappel" role="note">
-        ⚠ Placeholder : remplacer l’adresse Brevo « {liste} » dans FormInfolettre.astro avant la mise
-        en ligne.
-      </p>
-    )
-  }
 
   <!-- Piège à robots (honeypot) de Brevo : invisible, doit rester vide. -->
   <div class="hp" aria-hidden="true">
@@ -170,14 +162,5 @@ const idForm = `form-${liste}`;
     width: 1px;
     height: 1px;
     overflow: hidden;
-  }
-  .rappel {
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: 12px;
-    border: 1px dashed #ffb020;
-    background: rgba(255, 176, 32, .12);
-    color: #ffd27a;
-    font: 500 .8rem/1.4 var(--mono);
   }
 </style>

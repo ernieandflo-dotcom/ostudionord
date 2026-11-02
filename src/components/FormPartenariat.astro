@@ -10,7 +10,8 @@
 import { FORMSPREE, estPlaceholder } from '../lib/formulaires';
 
 const action = FORMSPREE.partenariat;
-const placeholder = estPlaceholder('partenariat');
+// Avertit dans la console du build tant que l'adresse est un placeholder.
+estPlaceholder('partenariat');
 
 // Choix du champ « Type d'organisation » (envoyés tels quels à Formspree).
 const TYPES = [
@@ -26,14 +27,6 @@ const TYPES = [
 ---
 
 <form class="form" id="form-partenariat" action={action} method="POST" accept-charset="UTF-8">
-  {
-    placeholder && import.meta.env.DEV && (
-      <p class="rappel" role="note">
-        ⚠ Placeholder : remplacer l’adresse Formspree « partenariat » dans src/lib/formulaires.ts
-        avant la mise en ligne.
-      </p>
-    )
-  }
 
   <!-- Piège à robots (honeypot) de Formspree : invisible, doit rester vide. -->
   <div class="hp" aria-hidden="true">
@@ -205,14 +198,5 @@ const TYPES = [
     width: 1px;
     height: 1px;
     overflow: hidden;
-  }
-  .rappel {
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: 12px;
-    border: 1px dashed #ffb020;
-    background: rgba(255, 176, 32, .12);
-    color: #ffd27a;
-    font: 500 .8rem/1.4 var(--mono);
   }
 </style>

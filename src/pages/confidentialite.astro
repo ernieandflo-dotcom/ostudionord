@@ -146,14 +146,6 @@ const FOURNISSEURS = [
 >
   <section aria-label="Politique de confidentialité">
     <div class="wrap doc">
-      {
-        responsablePlaceholder && import.meta.env.DEV && (
-          <p class="rappel" role="note">
-            ⚠ Placeholder : désigner le ou la responsable (RESPONSABLE_RP dans src/data/site.ts)
-            avant la mise en ligne.
-          </p>
-        )
-      }
 
       <div class="bref">
         <h2 id="h-bref">En bref</h2>
@@ -415,15 +407,6 @@ const FOURNISSEURS = [
     display: grid;
     gap: 28px;
     max-width: calc(48rem + 2 * var(--g));
-  }
-  .rappel {
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: 12px;
-    border: 1px dashed #ffb020;
-    background: rgba(255, 176, 32, .12);
-    color: #ffd27a;
-    font: 500 .8rem/1.4 var(--mono);
   }
   .bref {
     padding: clamp(18px, 4vw, 32px);
