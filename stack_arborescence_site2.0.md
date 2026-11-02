@@ -1,6 +1,6 @@
 # Studio Nord — Site 2.0 : stack et arborescence
 
-*Mise à jour : 2 novembre 2026 (étape j : _redirects, _headers, CSP générée par Astro, plan du site, robots.txt, vérification finale ; étape i : /confidentialite/ (Loi 25), /merci/, /404, tirets cadratins remplacés et garde-fou au build ; étape h.1 : quota du VIP Pass, compteur hybride Stripe/manuel, intérêt « Autre vêtement » ; étape H terminée : /a-propos/ remplace /contact/ dans le menu, avec /a-propos/contact/ et /a-propos/faq/ ; sous-navigation commune ; collection `faq`) · Lancement visé : 8 novembre 2026*
+*Mise à jour : 2 novembre 2026 (étape k : revue de la liste de contrôle, cartes Séries de l'accueil avec image de fond, initiales des fondateurs DF, GT, SO, MK ; étape j : _redirects, _headers, CSP générée par Astro, plan du site, robots.txt, vérification finale ; étape i : /confidentialite/ (Loi 25), /merci/, /404, tirets cadratins remplacés et garde-fou au build ; étape h.1 : quota du VIP Pass, compteur hybride Stripe/manuel, intérêt « Autre vêtement » ; étape H terminée : /a-propos/ remplace /contact/ dans le menu, avec /a-propos/contact/ et /a-propos/faq/ ; sous-navigation commune ; collection `faq`) · Lancement visé : 8 novembre 2026*
 
 ## Décisions prises
 
@@ -16,7 +16,8 @@
 | Infolettre | Brevo, avec un compte au nom de Studio Nord : listes « infolettre », « beats » et « drop ». Sans double confirmation (double opt-in) pour l'instant ; redirection après l'inscription vers /merci/ |
 | Page Studio | Remplacée par **/partenaires/** : partenaires locaux de Québec + formulaire « Vous souhaitez faire partenariat ? ». Vouvoiement sur cette page (tutoiement partout ailleurs). Nom affiché « GT Média », nom complet « Grosse-Tête Média » |
 | À propos | « À propos » (`/a-propos/`) remplace « Contact » dans le menu : histoire (ouverture le 15 janvier 2026, transition de studio d'enregistrement à maison de création), le lieu (photos du studio), fondateurs, séances en pause. Sous-pages `/a-propos/contact/` et `/a-propos/faq/`. Sous-navigation commune aux 3 pages (Le studio · Contact · FAQ) ; Contact et FAQ aussi dans le pied de page |
-| Fondateurs | Initiales seulement (DF, GT, SB, MK), **jamais liées aux fiches d'artistes** (deux univers séparés). Noms et visages dévoilés dans la série « Les fondateurs » (P2) |
+| Séries (accueil, P1) | Deux cartes « Arrive bientôt » avec image de fond décorative (`alt=""`) et voile sombre : « Les fondateurs » (`src/assets/series/les-fondateurs.jpg`) et « Coulisses ALFROMEGA » (`src/assets/sorties/thumbnail_ALFROMEGA.png`). Collection `series` en P2 |
+| Fondateurs | Initiales seulement (DF, GT, SO, MK), **jamais liées aux fiches d'artistes** (deux univers séparés). Noms et visages dévoilés dans la série « Les fondateurs » (P2) |
 | Séances d'enregistrement | En pause, aucun retour annoncé. La page À propos et la FAQ renvoient vers Kota Studios (enregistrement, mix, master) |
 | Visites du studio | Sur rendez-vous seulement |
 | Contact | Formspree (`FormContact`), sujets regroupés (Collaboration, Studio Nord, Autre), sans téléphone ni pièce jointe. Partenariats : renvoi vers `/partenaires/#partenariat` |
@@ -30,7 +31,7 @@
 | Créateurs | Section séparée `/createurs/` (BHNWTH) |
 | Dépôt de code | GitHub, migration possible vers GitLab : aucune dépendance propre à GitHub |
 | Langues | Bouton de langue (anglais, i18n d'Astro) envisagé en phase 3 |
-| Redirections | `public/_redirects` (Cloudflare Pages, 301) : anciennes URL avec et sans `.html`, `/contact` et `/contact/`, `/studio` et `/studio/`, `/archive` et `/archive/*` (règle avec joker en dernier). Cibles finissant par « / ». `www` → domaine principal : règle dans le tableau de bord Cloudflare (pas possible dans `_redirects`) |
+| Redirections | `public/_redirects` (Cloudflare Pages, 301) : anciennes URL avec et sans `.html`, `/contact` et `/contact/`, `/studio` et `/studio/`, `/archive` et `/archive/*` (règle avec joker en dernier). Cibles finissant par « / ». `www` → domaine principal : **Bulk Redirects** dans le tableau de bord Cloudflare (méthode de la documentation de Pages ; pas possible dans `_redirects`), avec un enregistrement DNS `www` proxifié |
 | Sécurité (CSP) | CSP **générée par Astro** (`security.csp`, stable depuis Astro 6) : balise `<meta>` dans chaque page, empreintes SHA-256 des scripts et styles en ligne recalculées à chaque build. Autorisés : media.ostudionord.ca (`media-src`), youtube-nocookie.com (`frame-src`), Formspree et Brevo (`form-action`, avec `'self'` pour la redirection vers /merci/), Cloudflare Web Analytics (`script-src`, `connect-src`), attributs `style` (`style-src-attr 'unsafe-inline'`). Stripe : simple lien, rien à déclarer. Absente en `npm run dev`. `public/_headers` : `frame-ancestors 'none'`, X-Frame-Options, nosniff, Referrer-Policy `strict-origin-when-cross-origin` (requise par YouTube et Web Analytics), Permissions-Policy (caméra, micro, géolocalisation, paiement, USB), cache d'un an pour `/_astro/*`, d'un jour pour `/audio/*`, noindex sur `ostudionord.pages.dev` |
 | HTTPS | « Always Use HTTPS » dans Cloudflare. HSTS : décision après le lancement |
 | Plan du site et robots | `@astrojs/sitemap` fixé à 3.7.4 : `sitemap-index.xml`, 404 exclue d'office, /merci/ exclue par filtre (toute nouvelle page `noindex` à ajouter au filtre). `robots.txt` : tout admis sauf `/admin/`, **robots d'IA compris (découvrabilité)** ; « Block AI bots » et robots.txt géré par Cloudflare désactivés |
@@ -177,6 +178,7 @@ ostudionord/
 │   │   └── a-propos/              index.astro, contact.astro, faq.astro
 │   ├── styles/                    tokens.css (palette, polices), global.css
 │   └── assets/                    Images optimisées par Astro : logos,
+│                                  séries (fonds des cartes de l'accueil),
 │                                  merch, cartes-cadeaux, portraits,
 │                                  partenaires (logos + image de partage),
 │                                  studio (photos du matériel : /a-propos/)
@@ -214,7 +216,7 @@ Pour publier une nouvelle vidéo, il suffit d'ajouter un fichier dans `src/conte
 - [ ] Faire valider `/confidentialite/` par un juriste, puis passer `POLITIQUE_A_VALIDER` à `false`.
 - [ ] Activer la double authentification sur les comptes Formspree, Brevo, Stripe, Namecheap, Cloudflare et GitHub (affirmé dans la politique).
 - [ ] Tenir un registre des incidents de confidentialité (même vide).
-- [ ] Cloudflare (étape j, à reporter dans la liste de contrôle à l'étape k) : règle de redirection `www.ostudionord.ca` → `ostudionord.ca` (301) et enregistrement DNS `www` ; activer « Always Use HTTPS » ; laisser désactivés Rocket Loader, Email Obfuscation, le Web Analytics automatique de Pages, « Block AI bots » et le robots.txt géré.
+- [ ] Cloudflare (reporté dans la liste de contrôle, section A) : Bulk Redirects `www.ostudionord.ca` → `ostudionord.ca` (301) et enregistrement DNS `www` ; activer « Always Use HTTPS » ; laisser désactivés Rocket Loader, Email Obfuscation, le Web Analytics automatique de Pages, « Block AI bots » et le robots.txt géré.
 - [ ] Sur la prévisualisation Cloudflare : vérifier les redirections et les en-têtes avec `curl.exe -sI` (README, « Tester en local »).
 
 ## Sources
@@ -234,6 +236,7 @@ Pour publier une nouvelle vidéo, il suffit d'ajouter un fichier dans `src/conte
 - [Brevo — Data storage location](https://help.brevo.com/hc/en-us/articles/360001005510)
 - [Namecheap — Where are your datacenters located?](https://www.namecheap.com/support/knowledgebase/article.aspx/136/22/where-are-your-datacenters-located-how-can-i-request-to-change-the-datacenter/)
 - [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)
-- [Cloudflare Pages — Redirects](https://developers.cloudflare.com/pages/configuration/redirects/) · [Headers](https://developers.cloudflare.com/pages/configuration/headers/) · [Preview deployments](https://developers.cloudflare.com/pages/configuration/preview-deployments/)
+- [Cloudflare Pages — Redirects](https://developers.cloudflare.com/pages/configuration/redirects/) · [Headers](https://developers.cloudflare.com/pages/configuration/headers/) · [Preview deployments](https://developers.cloudflare.com/pages/configuration/preview-deployments/) · [Redirecting www to domain apex](https://developers.cloudflare.com/pages/how-to/www-redirect/)
+- [Cloudflare — Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)
 - [Cloudflare — CSP et produits Cloudflare](https://developers.cloudflare.com/fundamentals/reference/policies-compliances/content-security-policies/)
 - [Astro 6 — CSP stable](https://astro.build/blog/astro-6) ; code d'astro@7.4.1 (`dist/core/csp/config.js`)

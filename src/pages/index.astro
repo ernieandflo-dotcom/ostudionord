@@ -15,6 +15,8 @@ import { parOrdre, sousTitreArtiste } from '../lib/personnes';
 import { LIBELLES, formaterDate, lienSortie, nomsDe as noms, quand, trierSorties, typesPresents } from '../lib/sorties';
 import hoodieBlanc from '../assets/merch/merch_Hoodie001-white-f.avif';
 import hoodieNoir from '../assets/merch/merch_Hoodie001-black-f.avif';
+import fondFondateurs from '../assets/series/les-fondateurs.jpg';
+import fondAlfromega from '../assets/sorties/thumbnail_ALFROMEGA.png';
 
 // ---------- Sorties ----------
 const sorties = trierSorties(await getCollection('sorties'));
@@ -33,16 +35,17 @@ const mur = sorties.slice(0, 8);
 const typesMur = typesPresents(mur);
 
 // ---------- Séries (P1 : placeholders, la collection « series » arrive en P2) ----------
+// `fond` : image décorative derrière la carte (alt vide : le titre est dans le <h3>).
 const series = [
   {
     titre: 'Les fondateurs',
-    texte: 'DF, GT, SB et MK : qui est derrière Studio Nord, et pourquoi.',
-    halo: 'rgba(0, 158, 226, .3)',
+    texte: 'DF, GT, SO et MK : qui est derrière Studio Nord, et pourquoi.',
+    fond: fondFondateurs,
   },
   {
     titre: 'Coulisses ALFROMEGA',
     texte: 'Les séances, les shows et la route vers la mixtape.',
-    halo: 'rgba(193, 232, 255, .3)',
+    fond: fondAlfromega,
   },
 ];
 
@@ -164,7 +167,15 @@ const nomsVedette = vedette ? await noms(vedette) : '';
       <div class="series">
         {
           series.map((s) => (
-            <article class="serie" style={`--halo: ${s.halo}`}>
+            <article class="serie">
+              <Image
+                class="fond"
+                src={s.fond}
+                alt=""
+                widths={[480, 800, 1280]}
+                sizes="(min-width: 800px) 50vw, 100vw"
+                quality="mid"
+              />
               <span class="mono ep">Arrive bientôt</span>
               <div>
                 <h3>{s.titre}</h3>
@@ -409,17 +420,28 @@ const nomsVedette = vedette ? await noms(vedette) : '';
     border: 1px solid var(--ligne);
     background: var(--carte);
   }
+  /* Image de fond (décorative) + voile sombre pour la lisibilité du texte. */
+  .serie .fond {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
   .serie::before {
     content: "";
     position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: var(--halo);
-    filter: blur(30px);
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to top,
+      rgba(4, 10, 20, .94) 0%,
+      rgba(4, 10, 20, .7) 45%,
+      rgba(4, 10, 20, .55) 100%
+    );
   }
+  .serie { isolation: isolate; } /* garde l'image et le voile sous le texte */
   .serie .ep { color: var(--glace); }
   .serie h3 {
     margin: 8px 0 6px;

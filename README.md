@@ -41,7 +41,7 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 - [ ] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
       et Branche-Toi, et leur accord pour l'image de partage (mosaïque des logos).
 
-- [ ] **Cloudflare (étape j, à revoir à l'étape k)** : règle de redirection
+- [ ] **Cloudflare (liste de contrôle, section A)** : Bulk Redirects
       `www.ostudionord.ca` → `ostudionord.ca` (301) et enregistrement DNS `www` ;
       activer « Always Use HTTPS » (HSTS : décision après le lancement) ; laisser
       désactivés Rocket Loader, Email Obfuscation, le Web Analytics automatique de Pages
@@ -311,7 +311,8 @@ Une ligne = `source destination 301`. La première règle qui correspond s'appli
 la règle avec joker (`/archive/*`) reste la dernière. Une cible peut contenir une ancre
 (`#reserver`) ou un paramètre (`?type=coulisses`) et finit toujours par « / ».
 Les redirections d'un domaine entier (`www.` → domaine principal) ne se font pas ici,
-mais dans le tableau de bord Cloudflare.
+mais dans le tableau de bord Cloudflare, page **Bulk Redirects** (liste + règle,
+méthode de la documentation de Cloudflare Pages), avec un enregistrement DNS `www` proxifié.
 
 ### Sécurité (CSP et en-têtes)
 
