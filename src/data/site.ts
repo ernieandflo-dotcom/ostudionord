@@ -4,7 +4,7 @@
 
 export const SITE = {
   nom: 'Studio Nord',
-  titreDefaut: 'Studio Nord — Son, image, histoires',
+  titreDefaut: 'Studio Nord · Son, image, histoires',
   description:
     'Studio Nord, studio de création multimédia de Limoilou (Québec) : musique, vidéo, coulisses et séries avec les artistes de la maison.',
   locale: 'fr_CA',
@@ -32,6 +32,20 @@ export const DISCORD = 'https://discord.gg/kTXP3u4tdQ';
 
 // Seule adresse courriel publique. L'adresse de gestion n'apparaît jamais sur le site.
 export const COURRIEL = 'info@ostudionord.ca';
+
+// Responsable de la protection des renseignements personnels (Loi 25, art. 3.1) : son titre
+// et ses coordonnées doivent être publiés sur le site (page /confidentialite/). Le nom n'est
+// pas exigé : on n'affiche que le titre (les fondateurs restent anonymes).
+// ─────────────────────────────────────────────────────────────────────────────
+// À FAIRE AVANT LE LANCEMENT : désigner la personne (par défaut, la loi confie ce rôle à
+// la personne ayant la plus haute autorité dans l'entreprise ; on peut le déléguer par écrit),
+// puis remplacer le titre ci-dessous (ex. « Cofondateur de Studio Nord »).
+// Tant que le titre contient « REMPLACER », un avertissement s'affiche au build.
+// ─────────────────────────────────────────────────────────────────────────────
+export const RESPONSABLE_RP = {
+  titre: 'REMPLACER (titre du ou de la responsable)',
+  courriel: COURRIEL,
+} as const;
 
 export const ADRESSE = {
   rue: '199, 2e Avenue',

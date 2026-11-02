@@ -1,4 +1,45 @@
 ---
-// Page introuvable.
+// Page introuvable (erreur 404).
 // Phase : P1 (étape i)
+//
+// Astro la génère en dist/404.html ; Cloudflare Pages la sert d'office pour toute adresse
+// inconnue (avec le code 404). Non indexée (noindex). Les anciennes adresses connues
+// (booking.html, contact.html…) seront redirigées à l'étape j (public/_redirects) :
+// cette page attrape le reste.
+import Page from '../layouts/Page.astro';
+import LiensUtiles from '../components/LiensUtiles.astro';
+
+const LIENS = [
+  { href: '/contenu/', titre: 'Contenu', texte: 'Clips, coulisses, séries et lives.' },
+  { href: '/artistes/', titre: 'Artistes', texte: 'Les voix et le beatmaker de la maison.' },
+  { href: '/boutique/', titre: 'Boutique', texte: 'Merch, beats, VIP Pass et cartes-cadeaux.' },
+  { href: '/a-propos/faq/', titre: 'FAQ', texte: 'Tes questions, nos réponses.' },
+];
 ---
+
+<Page
+  title="Page introuvable"
+  surtitre="Erreur 404"
+  intro="Cette page n’existe pas, ou plus. Le site a fait peau neuve le 8 novembre 2026 : certaines adresses ont changé."
+  description="Cette page de Studio Nord est introuvable."
+  noindex
+>
+  <section aria-labelledby="h-pistes">
+    <div class="wrap">
+      <h2 id="h-pistes" class="sr">Où aller</h2>
+      <LiensUtiles liens={LIENS} label="Pages du site" />
+      <p class="autres">
+        Ou retourne à l’<a class="lien" href="/">accueil</a>. Tu cherchais quelque chose de
+        précis ?{' '}<a class="lien" href="/a-propos/contact/">Écris-nous</a>.
+      </p>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section { padding-top: 32px; }
+  .autres {
+    margin: 22px 0 0;
+    color: var(--doux);
+  }
+</style>

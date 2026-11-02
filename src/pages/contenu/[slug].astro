@@ -57,7 +57,7 @@ const description =
   d.resume ??
   `${d.titre} : ${libelle.un.toLowerCase()}${d.legende ? ` (${d.legende})` : ''}` +
     `${noms ? ` avec ${noms}` : ''}, par Studio Nord à Limoilou.`;
-const titrePage = noms ? `${d.titre} — ${noms}` : d.titre;
+const titrePage = noms ? `${d.titre} · ${noms}` : d.titre;
 
 const srcVideo = d.videoR2 ? media(d.videoR2) : undefined;
 const srcSousTitres = d.sousTitresR2 ? media(d.sousTitresR2) : undefined;

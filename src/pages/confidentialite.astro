@@ -1,4 +1,546 @@
 ---
-// Politique de confidentialité (Loi 25).
+// Politique de confidentialité (Loi 25). Tutoiement.
 // Phase : P1 (étape i)
+//
+// Exigée par la Loi sur la protection des renseignements personnels dans le secteur privé
+// (modifiée par la Loi 25) : politique « en termes simples et clairs » (art. 8.2), titre et
+// coordonnées du responsable (art. 3.1). Les cases de consentement des formulaires et la FAQ
+// renvoient ici.
+//
+// Aucun JavaScript : table des matières en ancres, tableaux qui défilent dans leur propre
+// cadre sur mobile (jamais de défilement horizontal de la page).
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// À FAIRE AVANT LE LANCEMENT :
+//   1. Désigner le ou la responsable : RESPONSABLE_RP dans src/data/site.ts.
+//   2. Réaliser l'EFVP (évaluation des facteurs relatifs à la vie privée) pour les
+//      fournisseurs hors Québec : la section « Hors du Québec » affirme qu'elle a été faite.
+//   3. Faire valider ce texte par un juriste, puis passer POLITIQUE_A_VALIDER à false.
+// Tant que ce n'est pas fait, `npm run build` affiche un avertissement.
+// Chaque modification du texte : mettre à jour MISE_A_JOUR (date affichée en bas de page).
+// ─────────────────────────────────────────────────────────────────────────────
+import Page from '../layouts/Page.astro';
+import { SITE, COURRIEL, ADRESSE, RESPONSABLE_RP } from '../data/site';
+
+const POLITIQUE_A_VALIDER = true;
+
+const EN_VIGUEUR = { iso: '2026-11-08', texte: '8 novembre 2026' };
+const MISE_A_JOUR = { iso: '2026-11-08', texte: '8 novembre 2026' };
+
+const responsablePlaceholder = RESPONSABLE_RP.titre.includes('REMPLACER');
+if (import.meta.env.PROD) {
+  if (POLITIQUE_A_VALIDER) {
+    console.warn(
+      '\n⚠  À FAIRE AVANT LE LANCEMENT : faire l’EFVP et valider la politique de confidentialité avec un juriste (src/pages/confidentialite.astro, POLITIQUE_A_VALIDER).\n',
+    );
+  }
+  if (responsablePlaceholder) {
+    console.warn(
+      '\n⚠  À FAIRE AVANT LE LANCEMENT : désigner le ou la responsable de la protection des renseignements personnels (RESPONSABLE_RP dans src/data/site.ts).\n',
+    );
+  }
+}
+
+const SOMMAIRE = [
+  { id: 'responsable', titre: 'Qui est responsable' },
+  { id: 'recueillis', titre: 'Ce qu’on recueille, pourquoi, combien de temps' },
+  { id: 'utilisation', titre: 'Ce qu’on en fait (et ce qu’on ne fait pas)' },
+  { id: 'fournisseurs', titre: 'Nos fournisseurs et où sont tes renseignements' },
+  { id: 'hors-quebec', titre: 'Hors du Québec' },
+  { id: 'temoins', titre: 'Témoins (cookies) et statistiques' },
+  { id: 'droits', titre: 'Tes droits' },
+  { id: 'mineurs', titre: 'Moins de 14 ans' },
+  { id: 'securite', titre: 'Sécurité et incidents' },
+  { id: 'plainte', titre: 'Question ou plainte' },
+  { id: 'mises-a-jour', titre: 'Mises à jour' },
+];
+
+// Ce qu'on recueille : une rangée par moyen de collecte.
+const COLLECTE = [
+  {
+    quand: 'Formulaire de contact',
+    lien: '/a-propos/contact/',
+    quoi: 'Nom, courriel, sujet, message.',
+    pourquoi: 'Te répondre et donner suite à ta demande (collaboration, média, visite…).',
+    duree: '2 ans après notre dernier échange.',
+  },
+  {
+    quand: 'Formulaire de partenariat',
+    lien: '/partenaires/#partenariat',
+    quoi: 'Nom, organisation, courriel, type de partenariat, description du projet ; téléphone et site web ou réseau (facultatifs).',
+    pourquoi: 'Étudier la proposition et y répondre.',
+    duree: '2 ans après notre dernier échange.',
+  },
+  {
+    quand: 'Infolettre',
+    quoi: 'Courriel.',
+    pourquoi: 'T’envoyer l’infolettre (une à deux fois par mois).',
+    duree: 'Jusqu’à ton désabonnement.',
+  },
+  {
+    quand: 'Avis « beats »',
+    quoi: 'Courriel.',
+    pourquoi: 'T’écrire quand les beats seront en vente.',
+    duree: 'Jusqu’à ton désabonnement.',
+  },
+  {
+    quand: 'Avis du drop de merch',
+    quoi: 'Courriel, taille, couleur, intérêts (T-shirt, Casquette, Autre vêtement, CD, Vinyle, Poster d’artiste).',
+    pourquoi: 'T’avertir au drop et prévoir les quantités à produire.',
+    duree: '1 an après le drop (ou avant, si tu te désabonnes).',
+  },
+  {
+    quand: 'Commande par courriel (cartes-cadeaux, VIP Pass)',
+    quoi: 'Ton courriel et ce que tu écris : produit, quantité, s’il s’agit d’un cadeau.',
+    pourquoi: 'Traiter ta commande et te remettre ton produit.',
+    duree: '6 ans (registres comptables).',
+  },
+  {
+    quand: 'Achat du VIP Pass par Stripe',
+    quoi: 'Nom, courriel, renseignements de paiement. Ta carte est saisie chez Stripe : on ne voit jamais son numéro complet.',
+    pourquoi: 'Encaisser le paiement, t’écrire pour la suite et te donner accès aux événements.',
+    duree: '6 ans (registres comptables).',
+  },
+];
+
+// Fournisseurs : rôle et lieu d'hébergement (vérifié en novembre 2026 sur leurs sites).
+const FOURNISSEURS = [
+  {
+    nom: 'Formspree',
+    role: 'Reçoit les formulaires de contact et de partenariat, puis nous les transmet par courriel.',
+    ou: 'États-Unis',
+  },
+  {
+    nom: 'Brevo',
+    role: 'Gère les listes infolettre, beats et drop, et envoie ces courriels.',
+    ou: 'Union européenne (France, Allemagne, Belgique)',
+  },
+  {
+    nom: 'Stripe',
+    role: 'Traite le paiement du VIP Pass.',
+    ou: 'États-Unis',
+  },
+  {
+    nom: 'Namecheap (Private Email)',
+    role: `Héberge notre boîte ${COURRIEL} : tes messages, tes commandes et les formulaires reçus.`,
+    ou: 'États-Unis (Arizona)',
+  },
+  {
+    nom: 'Cloudflare',
+    role: 'Héberge le site et nos vidéos (media.ostudionord.ca), et compte les visites de façon anonyme (Web Analytics).',
+    ou: 'États-Unis, avec un réseau mondial de serveurs',
+  },
+  {
+    nom: 'YouTube (Google)',
+    role: 'Diffuse les clips intégrés au site, seulement après ton clic sur le lecteur.',
+    ou: 'États-Unis',
+  },
+];
 ---
+
+<Page
+  title="Confidentialité"
+  surtitre="Loi 25 · Renseignements personnels"
+  intro="Ce qu’on recueille sur toi, pourquoi, où c’est conservé et comment exercer tes droits. Écrit le plus simplement possible."
+  description="Politique de confidentialité de Studio Nord (Loi 25) : renseignements recueillis, fournisseurs, conservation, témoins, tes droits et la personne responsable."
+>
+  <section aria-label="Politique de confidentialité">
+    <div class="wrap doc">
+      {
+        responsablePlaceholder && import.meta.env.DEV && (
+          <p class="rappel" role="note">
+            ⚠ Placeholder : désigner le ou la responsable (RESPONSABLE_RP dans src/data/site.ts)
+            avant la mise en ligne.
+          </p>
+        )
+      }
+
+      <div class="bref">
+        <h2 id="h-bref">En bref</h2>
+        <ul>
+          <li>On recueille seulement ce qu’il faut pour te répondre, t’écrire ou traiter ta commande.</li>
+          <li>On ne vend, ne loue et n’échange aucun renseignement. Pas de publicité ciblée, pas de profilage.</li>
+          <li>Aucun témoin (cookie) sur le site. Nos statistiques de visite sont anonymes.</li>
+          <li>Les vidéos YouTube ne se chargent qu’après ton clic.</li>
+          <li>
+            Tu peux consulter, corriger ou faire supprimer tes renseignements, et retirer ton
+            consentement en tout temps : écris à{' '}
+            <a class="lien" href={`mailto:${RESPONSABLE_RP.courriel}`}>{RESPONSABLE_RP.courriel}</a>.
+          </li>
+        </ul>
+      </div>
+
+      <nav class="sommaire" aria-labelledby="h-sommaire">
+        <h2 id="h-sommaire" class="mono">Sur cette page</h2>
+        <ol>
+          {SOMMAIRE.map((s) => <li><a href={`#${s.id}`}>{s.titre}</a></li>)}
+        </ol>
+      </nav>
+
+      <div class="texte">
+        <h2 id="responsable">Qui est responsable</h2>
+        <p>
+          {SITE.nom}, studio de création de Limoilou, est responsable des renseignements personnels
+          recueillis sur ostudionord.ca. La personne responsable de la protection des renseignements
+          personnels veille à l’application de cette politique et répond à tes demandes.
+        </p>
+        <dl class="fiche">
+          <div>
+            <dt class="mono">Responsable</dt>
+            <dd>{RESPONSABLE_RP.titre}, {SITE.nom}</dd>
+          </div>
+          <div>
+            <dt class="mono">Courriel</dt>
+            <dd><a class="lien" href={`mailto:${RESPONSABLE_RP.courriel}`}>{RESPONSABLE_RP.courriel}</a></dd>
+          </div>
+          <div>
+            <dt class="mono">Par la poste</dt>
+            <dd>
+              <address>
+                {SITE.nom}, à l’attention de la personne responsable des renseignements personnels<br />
+                {ADRESSE.rue}, {ADRESSE.ville} ({ADRESSE.province}) {ADRESSE.codePostal}
+              </address>
+            </dd>
+          </div>
+        </dl>
+
+        <h2 id="recueillis">Ce qu’on recueille, pourquoi, combien de temps</h2>
+        <p>
+          On recueille des renseignements seulement quand tu remplis un formulaire, que tu nous
+          écris ou que tu achètes quelque chose. La simple visite du site ne nous donne aucun
+          renseignement qui t’identifie.
+        </p>
+        <p class="mono glisse" aria-hidden="true">Glisse le tableau →</p>
+        <div class="tableau" role="region" aria-labelledby="cap-collecte" tabindex="0">
+          <table>
+            <caption id="cap-collecte" class="sr">Renseignements recueillis, finalités et durées de conservation</caption>
+            <thead>
+              <tr>
+                <th scope="col">Quand</th>
+                <th scope="col">Ce qu’on recueille</th>
+                <th scope="col">Pourquoi</th>
+                <th scope="col">Combien de temps</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                COLLECTE.map((c) => (
+                  <tr>
+                    <th scope="row">{c.lien ? <a class="lien" href={c.lien}>{c.quand}</a> : c.quand}</th>
+                    <td>{c.quoi}</td>
+                    <td>{c.pourquoi}</td>
+                    <td>{c.duree}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Les champs marqués « facultatif » le sont vraiment. Les formulaires reçus par Formspree
+          arrivent aussi dans notre boîte courriel : la même durée s’applique aux deux endroits. Au
+          bout de cette durée, on supprime les renseignements.
+        </p>
+
+        <h2 id="utilisation">Ce qu’on en fait (et ce qu’on ne fait pas)</h2>
+        <p>
+          Tes renseignements servent seulement aux raisons indiquées dans le tableau. En cochant la
+          case de consentement d’un formulaire, tu acceptes cette utilisation ; tu peux retirer ton
+          consentement en tout temps (voir <a class="lien" href="#droits">Tes droits</a>).
+        </p>
+        <ul>
+          <li>Seuls les membres de l’équipe de {SITE.nom} qui en ont besoin y ont accès.</li>
+          <li>On ne les vend pas, on ne les loue pas, on ne les échange pas.</li>
+          <li>Pas de publicité ciblée, pas de profilage, aucune décision prise automatiquement à ton sujet.</li>
+          <li>
+            On ne les communique à personne d’autre que nos fournisseurs (ci-dessous), qui travaillent
+            pour nous, sauf si la loi nous y oblige.
+          </li>
+        </ul>
+
+        <h2 id="fournisseurs">Nos fournisseurs et où sont tes renseignements</h2>
+        <p>
+          Ces services nous aident à faire fonctionner le site. Ils n’utilisent tes renseignements que
+          pour nous rendre ce service, selon leurs conditions et leur propre politique de
+          confidentialité.
+        </p>
+        <p class="mono glisse" aria-hidden="true">Glisse le tableau →</p>
+        <div class="tableau" role="region" aria-labelledby="cap-fournisseurs" tabindex="0">
+          <table>
+            <caption id="cap-fournisseurs" class="sr">Fournisseurs, leur rôle et le lieu d’hébergement des renseignements</caption>
+            <thead>
+              <tr>
+                <th scope="col">Fournisseur</th>
+                <th scope="col">Son rôle</th>
+                <th scope="col">Où sont les renseignements</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                FOURNISSEURS.map((f) => (
+                  <tr>
+                    <th scope="row">{f.nom}</th>
+                    <td>{f.role}</td>
+                    <td>{f.ou}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="hors-quebec">Hors du Québec</h2>
+        <p>
+          Aucun de ces fournisseurs ne conserve tes renseignements au Québec : ils sont hébergés aux
+          États-Unis ou en Europe, où les lois sur la protection des renseignements personnels
+          diffèrent des nôtres. Aux États-Unis, par exemple, des autorités peuvent dans certains cas
+          exiger l’accès à des données.
+        </p>
+        <p>
+          Avant de leur confier tes renseignements, on a évalué les risques, comme l’exige la Loi 25
+          (évaluation des facteurs relatifs à la vie privée) : la sensibilité des renseignements, à
+          quoi ils servent, les mesures de protection et les engagements écrits de chaque fournisseur,
+          et les lois du pays où ils sont conservés. On a choisi des fournisseurs reconnus, liés par
+          leurs conditions et leurs ententes de traitement des données, et on ne leur transmet que le
+          strict nécessaire.
+        </p>
+
+        <h2 id="temoins">Témoins (cookies) et statistiques</h2>
+        <ul>
+          <li>
+            <strong>Aucun témoin.</strong> Le site n’utilise ni témoin (cookie), ni publicité, ni outil de
+            suivi d’un réseau social.
+          </li>
+          <li>
+            <strong>Statistiques anonymes.</strong> Cloudflare Web Analytics compte les pages vues, le
+            pays, le navigateur et la page d’où tu arrives, sans témoin et sans rien enregistrer dans ton
+            navigateur. Un petit script de Cloudflare (static.cloudflareinsights.com) se charge pour ce
+            comptage. On voit seulement des totaux, jamais qui tu es.
+          </li>
+          <li>
+            <strong>YouTube seulement après ton clic.</strong> Avant ton clic, le site affiche une simple
+            image : rien ne vient de YouTube. Après ton clic, le lecteur vient de youtube-nocookie.com, et
+            YouTube (Google) applique alors ses propres règles.
+          </li>
+          <li>
+            <strong>Nos beats et nos vidéos</strong> sont servis par nos propres serveurs (Cloudflare),
+            sans lecteur d’un autre service.
+          </li>
+          <li>
+            <strong>Liens vers d’autres sites</strong> (Instagram, Discord, partenaires, boutiques…) : ils
+            s’ouvrent dans un nouvel onglet et suivent leurs propres règles.
+          </li>
+        </ul>
+        <p>
+          Comme pour tout site Web, Cloudflare traite aussi des données techniques (adresse IP,
+          type de navigateur) pour afficher les pages et protéger le site contre les attaques.
+        </p>
+
+        <h2 id="droits">Tes droits</h2>
+        <ul>
+          <li><strong>Accès :</strong> savoir quels renseignements on détient sur toi et en obtenir une copie.</li>
+          <li><strong>Rectification :</strong> faire corriger un renseignement inexact, incomplet ou périmé.</li>
+          <li><strong>Retrait du consentement :</strong> nous demander de cesser d’utiliser tes renseignements.</li>
+          <li>
+            <strong>Désabonnement :</strong> le lien au bas de chaque courriel de {SITE.nom} te retire de la
+            liste, immédiatement.
+          </li>
+          <li>
+            <strong>Suppression :</strong> faire supprimer tes renseignements quand on n’en a plus besoin
+            ou qu’on n’a plus le droit de les garder.
+          </li>
+          <li>
+            <strong>Désindexation :</strong> faire cesser la diffusion d’un renseignement te concernant,
+            dans les cas prévus par la loi.
+          </li>
+          <li>
+            <strong>Portabilité :</strong> recevoir tes renseignements dans un format courant, lisible par
+            un ordinateur.
+          </li>
+        </ul>
+        <p>
+          Pour exercer un droit, écris à la personne responsable à{' '}
+          <a class="lien" href={`mailto:${RESPONSABLE_RP.courriel}?subject=${encodeURIComponent('Renseignements personnels')}`}>{RESPONSABLE_RP.courriel}</a>{' '}
+          avec l’objet « Renseignements personnels ». On pourrait te demander de confirmer ton
+          identité. On te répond par écrit dans les 30 jours, sans frais.
+        </p>
+
+        <h2 id="mineurs">Moins de 14 ans</h2>
+        <p>
+          Si tu as moins de 14 ans, demande à ton parent ou à ton tuteur de remplir le formulaire
+          avec toi : la loi exige son consentement. Si on apprend qu’on a reçu des renseignements
+          d’une personne de moins de 14 ans sans ce consentement, on les supprime.
+        </p>
+
+        <h2 id="securite">Sécurité et incidents</h2>
+        <p>
+          Le site est servi en connexion chiffrée (HTTPS). Nos comptes chez les fournisseurs sont
+          protégés par des mots de passe forts et la double authentification, et leur accès est
+          limité. On ne demande ni pièce jointe ni renseignement sensible.
+        </p>
+        <p>
+          Si un incident de confidentialité survient (accès, utilisation ou communication non
+          autorisés, ou perte de renseignements) et qu’il présente un risque de préjudice sérieux, on
+          avise la Commission d’accès à l’information et les personnes concernées. On tient aussi un
+          registre de ces incidents.
+        </p>
+
+        <h2 id="plainte">Question ou plainte</h2>
+        <p>
+          Écris d’abord à la personne responsable : on traite chaque plainte et on te répond par
+          écrit dans les 30 jours. Si notre réponse ne te convient pas, tu peux t’adresser à la{' '}
+          <a class="lien" href="https://www.cai.gouv.qc.ca/" target="_blank" rel="noopener">
+            Commission d’accès à l’information du Québec<span class="sr"> (nouvel onglet)</span>
+          </a>.
+        </p>
+
+        <h2 id="mises-a-jour">Mises à jour</h2>
+        <p>
+          Cette politique peut changer, par exemple quand on ajoute un service (comme la vente de
+          beats, prévue en 2027). La date ci-dessous change alors, et les changements importants sont
+          annoncés sur cette page.
+        </p>
+        <p class="mono dates">
+          En vigueur depuis le <time datetime={EN_VIGUEUR.iso}>{EN_VIGUEUR.texte}</time> · Dernière mise à
+          jour : <time datetime={MISE_A_JOUR.iso}>{MISE_A_JOUR.texte}</time>
+        </p>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section { padding-top: 32px; }
+  .doc {
+    display: grid;
+    gap: 28px;
+    max-width: calc(48rem + 2 * var(--g));
+  }
+  .rappel {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px dashed #ffb020;
+    background: rgba(255, 176, 32, .12);
+    color: #ffd27a;
+    font: 500 .8rem/1.4 var(--mono);
+  }
+  .bref {
+    padding: clamp(18px, 4vw, 32px);
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--abysse);
+  }
+  .bref h2 {
+    margin: 0 0 12px;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  .bref ul { margin: 0; padding-left: 1.2em; }
+  .bref li { margin: 6px 0; line-height: 1.5; }
+
+  .sommaire h2 {
+    margin: 0 0 8px;
+    color: var(--cyan);
+    font-weight: 500;
+  }
+  .sommaire ol {
+    margin: 0;
+    padding-left: 1.6em;
+    columns: 2 18rem;
+    column-gap: 32px;
+  }
+  .sommaire li { margin: 4px 0; break-inside: avoid; }
+  .sommaire a {
+    color: var(--glace);
+    text-underline-offset: 3px;
+  }
+  .sommaire a:hover { color: var(--texte); }
+
+  .texte { min-width: 0; }
+  .texte h2 {
+    margin: 44px 0 12px;
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    line-height: 1.05;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+    scroll-margin-top: 90px; /* l'en-tête collant ne cache pas le titre visé */
+  }
+  .texte h2:first-child { margin-top: 0; }
+  .texte p, .texte li {
+    color: var(--doux);
+    line-height: 1.6;
+  }
+  .texte strong { color: var(--texte); }
+  .texte ul { padding-left: 1.2em; }
+  .texte li { margin: 6px 0; }
+
+  .fiche {
+    display: grid;
+    gap: 12px;
+    margin: 18px 0 0;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .fiche dt { color: var(--cyan); }
+  .fiche dd {
+    margin: 2px 0 0;
+    color: var(--texte);
+    overflow-wrap: anywhere;
+  }
+  address { font-style: normal; }
+
+  /* Tableaux : défilement dans leur propre cadre sur petit écran (jamais la page entière).
+     tabindex="0" sur le cadre : on peut le faire défiler au clavier. */
+  /* Indice visible seulement quand le tableau déborde de l'écran (petits écrans). */
+  .glisse {
+    margin: 18px 0 -10px;
+    color: var(--cyan);
+    font-size: .68rem;
+  }
+  @media (min-width: 720px) {
+    .glisse { display: none; }
+  }
+  .tableau {
+    margin: 18px 0;
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--ligne);
+  }
+  .tableau:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  table {
+    width: 100%;
+    min-width: 40rem;
+    border-collapse: collapse;
+    font-size: .92rem;
+  }
+  th, td {
+    padding: 12px 14px;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.45;
+    border-bottom: 1px solid var(--ligne);
+  }
+  tbody tr:last-child > * { border-bottom: 0; }
+  thead th {
+    background: var(--abysse);
+    color: var(--cyan);
+    font: 500 .72rem/1.3 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  tbody th {
+    color: var(--texte);
+    font-weight: 700;
+    min-width: 9rem;
+  }
+  td { color: var(--doux); }
+  .dates {
+    margin-top: 28px;
+    color: var(--doux);
+    line-height: 1.6;
+  }
+</style>

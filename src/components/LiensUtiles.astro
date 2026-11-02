@@ -1,0 +1,75 @@
+---
+// Grille de « liens utiles » (grandes cartes cliquables), pour /merci/ et /404.
+// Phase : P1 (étape i)
+//
+// Une carte = un lien interne avec un titre et une courte phrase.
+// 1 colonne sur mobile, 2 dès 560 px, 4 dès 1000 px. Aucun JavaScript.
+
+interface Lien {
+  href: string;
+  titre: string;
+  texte: string;
+}
+
+interface Props {
+  liens: Lien[];
+  /** Nom de la liste pour les lecteurs d'écran. */
+  label: string;
+}
+
+const { liens, label } = Astro.props;
+---
+
+<ul class="liens" aria-label={label}>
+  {
+    liens.map((l) => (
+      <li>
+        <a href={l.href}>
+          <strong>
+            {l.titre} <span aria-hidden="true">→</span>
+          </strong>
+          <span class="texte">{l.texte}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .liens {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 560px) {
+    .liens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1000px) {
+    .liens { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  a {
+    display: grid;
+    gap: 6px;
+    height: 100%;
+    padding: 20px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+    color: var(--texte);
+    text-decoration: none;
+  }
+  a:hover { border-color: var(--glace); background: var(--abysse); }
+  a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  strong {
+    font-size: 1.35rem;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  strong span { color: var(--cyan); }
+  .texte {
+    color: var(--doux);
+    line-height: 1.45;
+  }
+</style>

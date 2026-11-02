@@ -1,4 +1,112 @@
 ---
-// Page de remerciement après envoi d'un formulaire.
+// Page de remerciement, générique : inscription Brevo (infolettre, beats, drop),
+// paiement du VIP Pass par Stripe, et plus tard (P2) les formulaires Formspree.
 // Phase : P1 (étape i)
+//
+// Non indexée (noindex). Aucun JavaScript et aucune lecture de l'URL : la page convient à
+// toutes les redirections, même si Stripe ajoute des paramètres (?session_id=…).
+// Réglages à faire hors du code (README, « Formulaires » et « VIP Pass ») :
+//   - Brevo › chaque formulaire › redirection après l'inscription : https://ostudionord.ca/merci/
+//   - Stripe › Payment Link du VIP Pass › après le paiement : https://ostudionord.ca/merci/
+//   - Formspree : forfait gratuit en P1, le visiteur voit la page de Formspree (pas celle-ci).
+// Si la double confirmation (double opt-in) est activée un jour dans Brevo, ajuster la
+// phrase « Tu t'es abonné·e à une liste » (« Confirme ton inscription dans ta boîte… »).
+import Page from '../layouts/Page.astro';
+import LiensUtiles from '../components/LiensUtiles.astro';
+import { DISCORD } from '../data/site';
+
+const CAS = [
+  {
+    titre: 'Tu t’es abonné·e à une liste',
+    texte:
+      'Ton courriel est bien inscrit (infolettre, beats ou drop). Pour te désabonner, un lien t’attend au bas de chacun de nos courriels.',
+  },
+  {
+    titre: 'Tu as acheté ton VIP Pass',
+    texte: 'Stripe t’envoie ton reçu par courriel. On te contacte par courriel pour la suite.',
+  },
+  {
+    titre: 'Tu nous as écrit',
+    texte: 'On lit tout et on te répond par courriel.',
+  },
+];
+
+const LIENS = [
+  { href: '/contenu/', titre: 'Contenu', texte: 'Clips, coulisses, séries et lives.' },
+  { href: '/artistes/', titre: 'Artistes', texte: 'Les voix et le beatmaker de la maison.' },
+  { href: '/boutique/', titre: 'Boutique', texte: 'Merch, beats, VIP Pass et cartes-cadeaux.' },
+  { href: '/', titre: 'Accueil', texte: 'Retour à la page d’accueil.' },
+];
 ---
+
+<Page
+  title="Merci, c’est reçu"
+  surtitre="Merci"
+  intro="On s’en occupe. Voici ce qui se passe ensuite."
+  description="Merci ! Studio Nord a bien reçu ton inscription, ton achat ou ton message."
+  noindex
+>
+  <section aria-labelledby="h-suite">
+    <div class="wrap">
+      <h2 id="h-suite" class="sr">Et maintenant ?</h2>
+      <ul class="cas">
+        {
+          CAS.map((c) => (
+            <li>
+              <h3>{c.titre}</h3>
+              <p>{c.texte}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-attente">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <p class="mono">En attendant</p>
+          <h2 id="h-attente">Fais un tour</h2>
+        </div>
+      </div>
+      <LiensUtiles liens={LIENS} label="Pages du site" />
+      <p class="discord">
+        <a class="btn btn-g" href={DISCORD} target="_blank" rel="noopener">
+          Rejoindre le Discord<span class="sr"> (nouvel onglet)</span>
+        </a>
+      </p>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section:first-of-type { padding-top: 32px; padding-bottom: 0; }
+  .cas {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 800px) {
+    .cas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  .cas li {
+    padding: 20px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--abysse);
+  }
+  h3 {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+  .cas p {
+    margin: 0;
+    color: var(--doux);
+    line-height: 1.5;
+  }
+  .discord { margin: 20px 0 0; }
+</style>

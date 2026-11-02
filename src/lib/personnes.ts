@@ -44,7 +44,7 @@ export const genresEnTexte = (genres: string[]) => genres.map(minuscule).join(',
 
 /**
  * Description d'un artiste (balise meta et partage) : l'accroche si elle existe,
- * sinon une phrase générée, ex. « Mølie — pop, R&B, hip-hop. Artiste de Studio Nord à Limoilou (Québec). »
+ * sinon une phrase générée, ex. « Mølie : pop, R&B, hip-hop. Artiste de Studio Nord à Limoilou (Québec). »
  */
 export function descriptionArtiste(a: Artiste): string {
   const { nom, accroche, genres, role } = a.data;
@@ -52,7 +52,7 @@ export function descriptionArtiste(a: Artiste): string {
   const styles = genresEnTexte(genres);
   return role === 'beatmaker'
     ? `${nom}, beatmaker de Studio Nord à Limoilou (Québec)${styles ? ` : ${styles}` : ''}. Écoute ses beats.`
-    : `${nom}${styles ? ` — ${styles}` : ''}. Artiste de Studio Nord à Limoilou (Québec).`;
+    : `${nom}${styles ? ` : ${styles}` : ''}. Artiste de Studio Nord à Limoilou (Québec).`;
 }
 
 // ---------- Liens externes ----------

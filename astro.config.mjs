@@ -2,11 +2,15 @@
 // Configuration Astro — Studio Nord (ostudionord.ca)
 // Site 100 % statique, déployé par l'intégration Git de Cloudflare Pages.
 import { defineConfig, fontProviders } from 'astro/config';
+// Garde-fou des tirets cadratins (étape i) : voir scripts/verifier-tirets.mjs.
+import { verifierTirets } from './scripts/verifier-tirets.mjs';
 
 export default defineConfig({
   site: 'https://ostudionord.ca',
   // Les URL du plan finissent par « / » (/contenu/, /artistes/molie/…).
   trailingSlash: 'always',
+
+  integrations: [verifierTirets()],
 
   // Polices (API Fonts d'Astro), fournisseur « local » : les fichiers sont
   // dans src/assets/fonts/ (licence SIL OFL, jointe). Astro génère les

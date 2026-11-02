@@ -11,7 +11,7 @@ import RetourHaut from '../components/RetourHaut.astro';
 import { SITE } from '../data/site';
 
 interface Props {
-  /** Titre de la page, sans « — Studio Nord » (ajouté automatiquement). Vide = titre du site. */
+  /** Titre de la page, sans « | Studio Nord » (ajouté automatiquement). Vide = titre du site. */
   title?: string;
   description?: string;
   /** Image de partage (Open Graph), importée depuis src/assets/. Défaut : /og-defaut.jpg */
@@ -44,7 +44,8 @@ const {
   partageCarre = false,
 } = Astro.props;
 
-const titreComplet = title ? `${title} — ${SITE.nom}` : SITE.titreDefaut;
+// Séparateurs (étape i) : « | » avant le nom du site, « · » à l'intérieur d'un titre.
+const titreComplet = title ? `${title} | ${SITE.nom}` : SITE.titreDefaut;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 // Image de partage, en URL absolue (exigé par Facebook et cie).
@@ -75,8 +76,8 @@ const analyticsActif = import.meta.env.PROD && Boolean(jetonAnalytics);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{titreComplet}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex" />}
+    <!-- Pages non indexées (/merci/, /404) : pas de lien canonique (étape i). -->
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#040a14" />

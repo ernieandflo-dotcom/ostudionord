@@ -25,6 +25,19 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 - [ ] **À propos** : relire les textes de `src/pages/a-propos/index.astro`, puis passer
       `TEXTES_A_VALIDER` à `false`. Tant que ce n'est pas fait, `npm run build` affiche
       « textes de /a-propos/ en brouillon ».
+- [ ] **Confidentialité (Loi 25)** : désigner le ou la responsable de la protection des
+      renseignements personnels et remplacer son titre dans `RESPONSABLE_RP`
+      (`src/data/site.ts`). Réaliser l'EFVP pour les fournisseurs hors Québec (Formspree,
+      Brevo, Stripe, Namecheap, Cloudflare, YouTube ; modèle de rapport de la CAI), faire
+      valider `src/pages/confidentialite.astro` par un juriste, puis passer
+      `POLITIQUE_A_VALIDER` à `false`. Tant que ce n'est pas fait, `npm run build` affiche
+      deux avertissements.
+- [ ] **Double authentification** : l'activer sur les comptes Formspree, Brevo, Stripe,
+      Namecheap, Cloudflare et GitHub (la politique de confidentialité l'affirme).
+- [ ] **Redirections vers `/merci/`** : Brevo (chaque formulaire › après l'inscription) et
+      Stripe (Payment Link du VIP Pass › après le paiement) : `https://ostudionord.ca/merci/`.
+      Si la double confirmation (double opt-in) est activée dans Brevo, ajuster la phrase
+      « Tu t'es abonné·e à une liste » de `src/pages/merci.astro`.
 - [ ] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
       et Branche-Toi, et leur accord pour l'image de partage (mosaïque des logos).
 
@@ -155,6 +168,20 @@ Titres et ordre des catégories : `src/lib/faq.ts` (`CATEGORIES_FAQ`, `TITRES_CA
 Les données structurées FAQPage (JSON-LD) se génèrent d'elles-mêmes.
 Ne pas renommer `reserver.md` : c'est la cible de la redirection de `booking.html`.
 
+### Tirets cadratins (—) : interdits dans le texte affiché
+
+Dans les titres, les `alt`, les textes des pages et des `.md`, on utilise « · », « : » ou « | ».
+Titre d'onglet : « Titre · détail | Studio Nord » (le « | Studio Nord » est ajouté par
+`Base.astro`). Les commentaires du code peuvent en contenir.
+Garde-fou : à la fin de `npm run build`, `scripts/verifier-tirets.mjs` relit les pages
+générées et affiche « À CORRIGER : tiret cadratin » avec la liste des pages en cause.
+
+### Politique de confidentialité
+
+`src/pages/confidentialite.astro`. À mettre à jour (texte et `MISE_A_JOUR`) à chaque nouveau
+formulaire, fournisseur ou type de vente (ex. beats en 2027). Le titre et le courriel du ou de
+la responsable sont dans `RESPONSABLE_RP` (`src/data/site.ts`).
+
 ### VIP Pass : places restantes
 
 Le quota (25) n'est jamais affiché ; la boutique affiche « Il n'en reste que N », puis
@@ -271,7 +298,7 @@ Options : `--debut 5` (seconde de départ de la boucle), `--force` (tout refaire
 |---|---|---|
 | `package.json` | Carte d'identité du projet : nom, version d'Astro (fixée à 7.4.1), Node minimal, et les commandes `npm run dev`, `build`, `preview`. | Pour mettre Astro à jour ou ajouter un paquet. |
 | `package-lock.json` | Créé par `npm install`. Fige la version exacte de chaque paquet pour que ton Mac et Cloudflare installent la même chose. | Jamais à la main. Toujours le commiter. |
-| `astro.config.mjs` | Réglages d'Astro : adresse du site (sitemap, liens absolus) et URL qui finissent par « / ». | Rarement (intégrations, options de build). |
+| `astro.config.mjs` | Réglages d'Astro : adresse du site (sitemap, liens absolus), URL qui finissent par « / », polices, et le garde-fou des tirets (`scripts/verifier-tirets.mjs`). | Rarement (intégrations, options de build). |
 | `tsconfig.json` | Réglages de TypeScript. Permet à VS Code de souligner les erreurs (champ manquant dans un `.md`, faute dans un nom de composant). N'a aucun effet sur le site publié. | Jamais, en principe. |
 | `.nvmrc` | Indique la version majeure de Node (22). Cloudflare Pages le lit pour choisir son Node au build ; `nvm use` le lit aussi si tu installes nvm. | Au passage à Node 24. |
 | `.gitignore` | Liste de ce que Git ne doit jamais envoyer : `node_modules/`, `dist/`, `.env`, vidéos, `.heic`, `.MOV`, `medias-sources/`. C'est le garde-fou qui empêche une vidéo d'atterrir dans le dépôt. | Pour exclure un nouveau type de fichier. |
