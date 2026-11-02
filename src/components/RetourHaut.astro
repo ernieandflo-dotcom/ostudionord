@@ -1,0 +1,87 @@
+---
+// Bouton « Retour en haut » : chevron dans un cercle, en bas à droite, petits écrans seulement.
+// Phase : P1 (étape h.2)
+//
+// Aucun JavaScript :
+//   - c'est un lien vers #top : sans élément portant cet id, le navigateur remonte tout en haut
+//     de la page (règle du HTML). Défilement doux grâce à global.css, coupé si le visiteur
+//     demande moins d'animations (prefers-reduced-motion) ;
+//   - apparition au défilement en CSS (animation liée au défilement, `animation-timeline`),
+//     après environ un écran. Navigateurs sans cette fonction (Firefox en 2026) : le bouton
+//     reste simplement toujours visible.
+// Inclus une seule fois, dans Base.astro.
+---
+
+<a class="haut" href="#top">
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+    <path
+      d="M6 15l6-6 6 6"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"></path>
+  </svg>
+  <span class="sr">Retour en haut de la page</span>
+</a>
+
+<style>
+  .haut {
+    position: fixed;
+    right: var(--g);
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 40; /* sous l'en-tête (50) et son menu */
+    display: grid;
+    place-items: center;
+    width: 44px; /* cible tactile minimale */
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(10, 24, 48, .82);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--contour);
+    color: var(--glace);
+  }
+  .haut:hover { border-color: var(--glace); }
+  .haut:focus-visible { border-radius: 50%; }
+
+  /* Ordinateur : pas de bouton. */
+  @media (min-width: 1000px) {
+    .haut { display: none; }
+  }
+  @media print {
+    .haut { display: none; }
+  }
+
+  /* Apparition après ~1 écran de défilement (navigateurs compatibles seulement).
+     Avant la plage, l'état « from » s'applique : invisible, ni cliquable ni atteignable au Tab. */
+  @supports (animation-timeline: scroll()) {
+    .haut {
+      animation-name: apparaitre;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-range: 60vh 100vh;
+    }
+    /* Règle séparée exprès : le minifieur CSS du build fusionnerait sinon ces lignes dans
+       le raccourci « animation », où animation-timeline n'est pas permis (ligne ignorée). */
+    a.haut {
+      animation-timeline: scroll(root block);
+    }
+  }
+  @keyframes apparaitre {
+    from {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+  }
+  /* Moins d'animations demandé : apparition d'un coup, sans fondu ni glissement. */
+  @media (prefers-reduced-motion: reduce) {
+    .haut { animation-timing-function: step-end; }
+  }
+</style>

@@ -1,12 +1,13 @@
 ---
 // Gabarit de base : <head> (SEO, polices, analytics), lien d'évitement, Header, <main>, Footer.
-// Phase : P1 (étape a)
+// Phase : P1 (étape a ; bouton « Retour en haut » à l'étape h.2)
 import '../styles/tokens.css';
 import '../styles/global.css';
 import { Font, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import RetourHaut from '../components/RetourHaut.astro';
 import { SITE } from '../data/site';
 
 interface Props {
@@ -119,5 +120,6 @@ const analyticsActif = import.meta.env.PROD && Boolean(jetonAnalytics);
       <slot />
     </main>
     <Footer />
+    <RetourHaut />
   </body>
 </html>

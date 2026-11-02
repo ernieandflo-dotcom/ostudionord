@@ -100,6 +100,11 @@ const reseaux = [{ nom: 'Discord', url: DISCORD }, ...reseauxActifs];
     font-weight: 600;
   }
   .reseaux a:hover { background: rgba(193, 232, 255, .12); }
+  /* Petits écrans : espace pour le bouton « Retour en haut » (RetourHaut), qui ne doit
+     jamais cacher le dernier lien du pied de page. */
+  @media (max-width: 999px) {
+    .pied { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  }
   .mentions {
     display: flex;
     flex-wrap: wrap;
