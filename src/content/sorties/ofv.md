@@ -2,7 +2,7 @@
 # Sortie : Clip « O.F.V. » — Mølie (YouTube gQxgzxCWyzU) — vignette : pochette en 16:9 (1280 × 720)
 # Phase : P1
 titre: O.F.V.
-type: video
+type: musique
 date: 2026-07-28
 artistes: [molie]
 youtubeId: gQxgzxCWyzU
