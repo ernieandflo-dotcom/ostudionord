@@ -41,6 +41,13 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 - [ ] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
       et Branche-Toi, et leur accord pour l'image de partage (mosaïque des logos).
 
+- [ ] **Cloudflare (étape j, à revoir à l'étape k)** : règle de redirection
+      `www.ostudionord.ca` → `ostudionord.ca` (301) et enregistrement DNS `www` ;
+      activer « Always Use HTTPS » (HSTS : décision après le lancement) ; laisser
+      désactivés Rocket Loader, Email Obfuscation, le Web Analytics automatique de Pages
+      (on utilise déjà le script avec jeton) et « Block AI bots » / robots.txt géré
+      (découvrabilité). Voir « Mise en ligne : redirections, sécurité, plan du site ».
+
 ## Démarrer
 
 ```sh
@@ -292,13 +299,74 @@ py scripts\convertir_medias.py video medias-sources\clip.MOV --slug mon-clip --d
 Sur Mac : `python3 scripts/convertir_medias.py decompte`.
 Options : `--debut 5` (seconde de départ de la boucle), `--force` (tout refaire).
 
+## Mise en ligne : redirections, sécurité, plan du site
+
+Étape j. Trois fichiers dans `public/` (copiés tels quels dans `dist/`) et deux réglages
+dans `astro.config.mjs`.
+
+### Redirections (`public/_redirects`)
+
+Anciennes URL du site GitHub Pages → nouvelles pages, en 301 (permanentes).
+Une ligne = `source destination 301`. La première règle qui correspond s'applique ;
+la règle avec joker (`/archive/*`) reste la dernière. Une cible peut contenir une ancre
+(`#reserver`) ou un paramètre (`?type=coulisses`) et finit toujours par « / ».
+Les redirections d'un domaine entier (`www.` → domaine principal) ne se font pas ici,
+mais dans le tableau de bord Cloudflare.
+
+### Sécurité (CSP et en-têtes)
+
+- **CSP** (politique de sécurité du contenu : la liste de ce que la page a le droit de
+  charger) : écrite par Astro dans chaque page (`security.csp` dans `astro.config.mjs`).
+  Astro y met l'empreinte de chaque script et style en ligne, recalculée à chaque build.
+  **Elle n'existe pas en `npm run dev`** : tester avec `npm run build` puis `npm run preview`.
+- **Ajout d'un service tiers** (script, iframe, formulaire, vidéo hébergée ailleurs) :
+  l'ajouter à la bonne directive de `security.csp` (`frame-src`, `form-action`,
+  `media-src`…), sinon le navigateur le bloque. Symptôme : rien ne s'affiche, et la
+  console (F12) dit « Refused to … because it violates the following Content Security
+  Policy directive ». Penser aussi à la politique de confidentialité (Loi 25).
+- **`public/_headers`** : `frame-ancestors 'none'` (aucun site ne peut afficher nos pages
+  dans un cadre ; impossible dans une balise `<meta>`), autres en-têtes de sécurité,
+  cache d'un an pour `/_astro/*`, d'un jour pour `/audio/*` (pour remplacer un extrait
+  tout de suite, changer son nom de fichier).
+- **Cloudflare** : Rocket Loader, Email Obfuscation et les autres fonctions qui injectent
+  des scripts doivent rester désactivés (la CSP les bloquerait).
+
+### Plan du site et robots
+
+- `@astrojs/sitemap` (fixé à 3.7.4) écrit `sitemap-index.xml` au build. La 404 est exclue
+  d'office ; `/merci/` est exclue par le filtre dans `astro.config.mjs`. Toute nouvelle
+  page `noindex` doit aussi être ajoutée à ce filtre.
+- `public/robots.txt` : tous les robots admis (y compris ceux des IA : découvrabilité),
+  sauf `/admin/`, et lien vers le plan du site. Ne jamais y bloquer une page `noindex` :
+  le robot doit pouvoir la lire pour voir la balise.
+
+### Tester en local
+
+`npm run preview` sert `dist/` avec la CSP, mais ignore `_redirects` et `_headers`.
+Pour les tester, Wrangler (l'outil de Cloudflare qui simule Pages) via `npx`, sans
+l'ajouter au projet (premier lancement : téléchargement d'environ une minute) :
+
+```sh
+npm run build
+npx wrangler@4 pages dev dist --port 8788
+# dans un 2e terminal (PowerShell : curl.exe ; Mac : curl)
+curl.exe -sI http://localhost:8788/booking.html     # 301, Location: /a-propos/faq/#reserver
+curl.exe -sI http://localhost:8788/                 # en-têtes de sécurité
+```
+
+Sur la prévisualisation Cloudflare, remplacer `http://localhost:8788` par l'adresse de la
+branche (`https://<branche>.ostudionord.pages.dev`).
+
 ## À quoi sert chaque fichier de configuration
 
 | Fichier | Rôle | Quand y toucher |
 |---|---|---|
 | `package.json` | Carte d'identité du projet : nom, version d'Astro (fixée à 7.4.1), Node minimal, et les commandes `npm run dev`, `build`, `preview`. | Pour mettre Astro à jour ou ajouter un paquet. |
 | `package-lock.json` | Créé par `npm install`. Fige la version exacte de chaque paquet pour que ton Mac et Cloudflare installent la même chose. | Jamais à la main. Toujours le commiter. |
-| `astro.config.mjs` | Réglages d'Astro : adresse du site (sitemap, liens absolus), URL qui finissent par « / », polices, et le garde-fou des tirets (`scripts/verifier-tirets.mjs`). | Rarement (intégrations, options de build). |
+| `astro.config.mjs` | Réglages d'Astro : adresse du site (sitemap, liens absolus), URL qui finissent par « / », polices, garde-fou des tirets (`scripts/verifier-tirets.mjs`), plan du site (`@astrojs/sitemap`) et CSP (`security.csp`). | Nouveau service tiers (CSP), nouvelle page `noindex` (filtre du plan du site). |
+| `public/_redirects` | Redirections 301 des anciennes URL (Cloudflare Pages). | Quand une page change d'adresse. |
+| `public/_headers` | En-têtes de sécurité et de cache (Cloudflare Pages). | Rarement. |
+| `public/robots.txt` | Règles pour les robots et lien vers le plan du site. | Rarement. |
 | `tsconfig.json` | Réglages de TypeScript. Permet à VS Code de souligner les erreurs (champ manquant dans un `.md`, faute dans un nom de composant). N'a aucun effet sur le site publié. | Jamais, en principe. |
 | `.nvmrc` | Indique la version majeure de Node (22). Cloudflare Pages le lit pour choisir son Node au build ; `nvm use` le lit aussi si tu installes nvm. | Au passage à Node 24. |
 | `.gitignore` | Liste de ce que Git ne doit jamais envoyer : `node_modules/`, `dist/`, `.env`, vidéos, `.heic`, `.MOV`, `medias-sources/`. C'est le garde-fou qui empêche une vidéo d'atterrir dans le dépôt. | Pour exclure un nouveau type de fichier. |

@@ -1,3 +1,34 @@
-# _headers — Cloudflare Pages
-# En-têtes de cache (assets, audio) et de sécurité (CSP, Referrer-Policy…).
-# Phase : P1 (étape j)
+# _headers · Cloudflare Pages · Phase : P1 (étape j)
+# En-têtes HTTP ajoutés aux réponses. Une adresse qui correspond à plusieurs blocs
+# reçoit les en-têtes de tous les blocs. Les redirections (_redirects) passent avant.
+#
+# La politique de sécurité du contenu (CSP) principale n'est PAS ici : Astro l'écrit
+# dans chaque page (<meta http-equiv="content-security-policy">, voir security.csp dans
+# astro.config.mjs), avec l'empreinte de chaque script et style en ligne.
+# Ici, seulement ce qu'une balise <meta> ne peut pas faire : frame-ancestors
+# (interdire qu'un autre site affiche nos pages dans un cadre).
+
+# Toutes les pages et tous les fichiers
+/*
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Fichiers produits par Astro (CSS, polices, images) : leur nom change à chaque
+# modification (empreinte dans le nom), donc cache d'un an sans revalidation.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Extraits des beats : nom fixe (SNB-0001.mp3). Cache d'un jour, puis le navigateur
+# peut resservir sa copie jusqu'à 7 jours pendant qu'il vérifie s'il y a du nouveau.
+# Pour remplacer un extrait tout de suite : changer son nom de fichier.
+/audio/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Adresse ostudionord.pages.dev (doublon de la production) : jamais indexée.
+# Les prévisualisations (<branche>.ostudionord.pages.dev) reçoivent déjà
+# « X-Robots-Tag: noindex » de Cloudflare, par défaut.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex

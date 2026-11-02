@@ -76,4 +76,7 @@ const type = src.endsWith('.webm') ? 'video/webm' : 'video/mp4';
     object-fit: contain;
     background: #000;
   }
+  /* Focus clavier (étape j) : contour dessiné à l'intérieur, sinon le
+     overflow: hidden du cadre .lv le coupe et il devient invisible. */
+  video:focus-visible { outline-offset: -3px; }
 </style>

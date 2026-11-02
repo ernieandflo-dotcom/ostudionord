@@ -1,3 +1,40 @@
-# _redirects — Cloudflare Pages
-# Redirections 301 des anciennes URL (booking.html, decompte.html, contact.html…).
-# Phase : P1 (étape j)
+# _redirects · Cloudflare Pages · Phase : P1 (étape j)
+# Redirections 301 (permanentes) des anciennes URL vers le site 2.0.
+#
+# Format d'une ligne : source  destination  code
+# - La première règle qui correspond à l'adresse demandée s'applique (ordre = priorité).
+# - Les redirections passent AVANT les fichiers : une règle s'applique même si
+#   le fichier existe (ex. /index.html).
+# - Règles fixes d'abord, règle avec joker (*) à la fin.
+# - Les cibles finissent par « / » (trailingSlash: 'always' dans astro.config.mjs) :
+#   pas de deuxième redirection.
+# - Une ancre (#reserver) ou un paramètre (?type=coulisses) est permis dans la cible.
+# Source : claude/ancien_site_notes.md (projet). Test : README, « Redirections ».
+
+# Ancien site (GitHub Pages), avec et sans « .html »
+/index.html                    /                            301
+/booking.html                  /a-propos/faq/#reserver      301
+/booking                       /a-propos/faq/#reserver      301
+/decompte.html                 /contenu/?type=coulisses     301
+/decompte                      /contenu/?type=coulisses     301
+/boutique.html                 /boutique/                   301
+/contact.html                  /a-propos/contact/           301
+/merci.html                    /merci/                      301
+/prixHoodie.html               /                            301
+/prixHoodie                    /                            301
+/test12.html                   /                            301
+/test12                        /                            301
+/ARCHIVE_prixLicenceMP3.html   /boutique/                   301
+/ARCHIVE_prixLicenceMP3        /boutique/                   301
+/ARCHIVE_prixForfaitMnM.html   /boutique/                   301
+/ARCHIVE_prixForfaitMnM        /boutique/                   301
+
+# Adresses prévues dans le plan 2.0, remplacées depuis
+/contact                       /a-propos/contact/           301
+/contact/                      /a-propos/contact/           301
+/studio                        /partenaires/                301
+/studio/                       /partenaires/                301
+
+# Dossier d'archive de l'ancien site (archive.html, boutique.html, booking.html…)
+/archive                       /                            301
+/archive/*                     /                            301
