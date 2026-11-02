@@ -1,0 +1,472 @@
+---
+// À propos : /a-propos/ (remplace « Contact » dans le menu). Tutoiement.
+// Phase : P1 (étape h)
+//
+// Sections : histoire (avec repères calculés), le lieu (photos du studio), les fondateurs
+// (initiales seulement, aucun lien vers les fiches d'artistes : deux univers séparés),
+// séances d'enregistrement en pause (renvoi vers Kota Studios), appel final (Contact, FAQ).
+// Sous-navigation commune : Le studio · Contact · FAQ.
+// Données structurées : Organization (JSON-LD).
+import { getCollection, getEntry } from 'astro:content';
+import { Image, getImage } from 'astro:assets';
+import Page from '../../layouts/Page.astro';
+import SousNav from '../../components/SousNav.astro';
+import { SITE, SOUS_NAV_A_PROPOS, COURRIEL, ADRESSE, reseauxActifs } from '../../data/site';
+import { DEGRADES, DEGRADE_PALE } from '../../lib/personnes';
+import logo from '../../assets/logos/logoSN_v0.7.png';
+import photoInterface from '../../assets/studio/materielSN_interface.jpg';
+import photoMicro from '../../assets/studio/materielSN_micro-close.jpg';
+import photoCabine from '../../assets/studio/materielSN_micro-cloud.jpg';
+import photoMoniteur from '../../assets/studio/materielSN_moniteur.jpg';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// À FAIRE AVANT LE LANCEMENT : relire et valider les textes de cette page (brouillons),
+// puis passer TEXTES_A_VALIDER à false. Tant que c'est true, `npm run build` affiche
+// un rappel dans la console.
+// ─────────────────────────────────────────────────────────────────────────────
+const TEXTES_A_VALIDER = true;
+if (TEXTES_A_VALIDER && import.meta.env.PROD) {
+  console.warn(
+    '\n⚠  À FAIRE AVANT LE LANCEMENT : textes de /a-propos/ en brouillon (src/pages/a-propos/index.astro, TEXTES_A_VALIDER).\n',
+  );
+}
+
+// Fondateurs : initiales seulement pour l'instant. Noms et visages dévoilés dans la série
+// « Les fondateurs ». Ne PAS relier aux fiches d'artistes.
+const FONDATEURS = ['DF', 'GT', 'SB', 'MK'];
+
+// Photos du studio (portrait 3:4).
+const PHOTOS = [
+  { src: photoInterface, alt: 'Poste de production du studio : deux écrans, une interface audio et un clavier sous un éclairage bleu et mauve' },
+  { src: photoMicro, alt: 'Micro à condensateur avec filtre anti-pop, devant un panneau acoustique' },
+  { src: photoCabine, alt: 'Cabine d’enregistrement bordée de lumières bleues, avec un nuage lumineux au plafond' },
+  { src: photoMoniteur, alt: 'Moniteur de studio dans la régie, avec le logo étoile de Studio Nord au mur' },
+];
+
+// Repères calculés depuis le contenu : rien à mettre à jour à la main.
+const [artistes, createurs, partenaires] = await Promise.all([
+  getCollection('artistes'),
+  getCollection('createurs'),
+  getCollection('partenaires'),
+]);
+const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
+
+// Kota Studios : logo et ancre de sa rangée sur /partenaires/.
+const kota = await getEntry('partenaires', 'kota-studios');
+
+// ---------- Données structurées (JSON-LD, schema.org Organization) ----------
+// Pas de dénomination légale ni de NEQ pour l'instant ; pas de fondateurs (données personnelles).
+const absolu = (u: string) => new URL(u, Astro.site).href;
+const logoLd = await getImage({ src: logo, width: 600, format: 'png' });
+const organisation = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE.nom,
+  url: absolu('/'),
+  logo: absolu(logoLd.src),
+  description: SITE.description,
+  email: COURRIEL,
+  foundingDate: '2026-01-15',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: ADRESSE.rue,
+    addressLocality: ADRESSE.ville,
+    addressRegion: ADRESSE.province,
+    postalCode: ADRESSE.codePostal,
+    addressCountry: 'CA',
+  },
+  ...(reseauxActifs.length > 0 && { sameAs: reseauxActifs.map((r) => r.url) }),
+};
+const jsonLd = JSON.stringify(organisation).replace(/</g, '\\u003c');
+---
+
+<Page
+  title="À propos"
+  surtitre="Studio Nord · Limoilou"
+  intro="Un studio ouvert à Limoilou en janvier 2026, qui devient une maison de création : on fait rayonner les artistes et les créateurs d’ici, en son, en image et en histoires."
+  description="L’histoire de Studio Nord, studio de création multimédia de Limoilou (Québec) ouvert en janvier 2026 : le lieu, l’équipe fondatrice et la transition vers une maison de création."
+  image={photoCabine}
+  imageAlt="La cabine d’enregistrement de Studio Nord, éclairée en bleu"
+>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
+  </Fragment>
+
+  <SousNav slot="sous-nav" liens={SOUS_NAV_A_PROPOS} label="Pages À propos" />
+
+  <!-- ═════════ HISTOIRE ═════════ -->
+  <section class="histoire" aria-labelledby="h-histoire">
+    <div class="wrap grille">
+      <div class="texte">
+        <div class="sec-h">
+          <div>
+            <span class="mono">Notre histoire</span>
+            <h2 id="h-histoire">D’un studio d’enregistrement à une maison de création</h2>
+          </div>
+        </div>
+        <p>
+          Studio Nord a ouvert ses portes le 15 janvier 2026, au 199, 2e Avenue, dans Limoilou.
+          Cinq jours de décompte sur les réseaux, puis le jour J : <a class="lien"
+            href="/contenu/?type=coulisses">les vidéos sont encore là</a>.
+        </p>
+        <p>
+          Au départ, on était un studio d’enregistrement : des artistes de Québec venaient y poser
+          leur voix, mixer et finaliser leurs projets. En chemin, on s’est rendu compte que ce qu’on
+          aimait le plus, c’était tout ce qui se passe autour de la musique : les clips, les
+          coulisses, les lives, les histoires.
+        </p>
+        <p>
+          Alors Studio Nord change de rôle. On devient une maison de création : on produit et on
+          diffuse du contenu avec les <a class="lien" href="/artistes/">artistes</a> et les{' '}
+          <a class="lien" href="/createurs/">créateurs</a> de la maison, entourés de{' '}
+          <a class="lien" href="/partenaires/">partenaires de Québec</a>. Ce site est la première
+          étape de cette transition.
+        </p>
+      </div>
+
+      <ul class="reperes" aria-label="Repères" role="list">
+        <li><span class="mono">15.01.2026</span>Ouverture du studio</li>
+        <li><span class="mono">Limoilou</span>{ADRESSE.rue}, {ADRESSE.ville}</li>
+        <li><span class="mono">2026</span>Du studio d’enregistrement à la maison de création</li>
+        <li>
+          <span class="mono">Aujourd’hui</span>
+          {pluriel(artistes.length, 'artiste', 'artistes')} · {pluriel(createurs.length, 'créateur', 'créateurs')} ·
+          {pluriel(partenaires.length, 'partenaire', 'partenaires')}
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═════════ LE LIEU ═════════ -->
+  <section class="lieu" aria-labelledby="h-lieu">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <span class="mono">Le lieu</span>
+          <h2 id="h-lieu">Au 199, 2e Avenue</h2>
+        </div>
+      </div>
+      <ul class="photos" role="list">
+        {
+          PHOTOS.map((p) => (
+            <li>
+              <Image
+                src={p.src}
+                alt={p.alt}
+                width={600}
+                widths={[300, 450, 600]}
+                sizes="(min-width: 1240px) 290px, (min-width: 800px) 23vw, 45vw"
+                loading="lazy"
+              />
+            </li>
+          ))
+        }
+      </ul>
+      <p class="rdv">
+        Visites sur rendez-vous seulement : <a class="lien" href="/a-propos/contact/">écris-nous</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═════════ FONDATEURS ═════════ -->
+  <section class="fondateurs" aria-labelledby="h-fondateurs">
+    <div class="wrap">
+      <div class="sec-h">
+        <div>
+          <span class="mono">L’équipe fondatrice</span>
+          <h2 id="h-fondateurs">Quatre initiales derrière le studio</h2>
+        </div>
+      </div>
+      <ul class="initiales" role="list" aria-label="Initiales des fondateurs">
+        {
+          FONDATEURS.map((ini, i) => {
+            const v = i % DEGRADES.length;
+            return (
+              <li>
+                <span
+                  class:list={['rond', { clair: v === DEGRADE_PALE }]}
+                  style={`--bg: ${DEGRADES[v]}`}
+                >
+                  {ini}
+                </span>
+              </li>
+            );
+          })
+        }
+      </ul>
+      <p class="annonce">
+        <span class="mono pastille">Série · Bientôt</span>
+        Qui se cache derrière ces initiales ? Tout sera dévoilé dans la série{' '}
+        <strong>Les fondateurs</strong>, épisode par épisode.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═════════ SÉANCES ═════════ -->
+  <section class="seances" aria-labelledby="h-seances">
+    <div class="wrap">
+      <div class="boite">
+        <div>
+          <p class="mono surtitre">Séances d’enregistrement</p>
+          <h2 id="h-seances">Les séances sont en pause</h2>
+          <p class="statut mono"><span aria-hidden="true">●</span> En pause · aucun retour annoncé</p>
+          <p>
+            Pendant notre transition vers la maison de création, on n’offre plus d’enregistrement,
+            de mixage ni de mastering. Si ça revient un jour, l’<a class="lien" href="/#infolettre"
+              >infolettre</a
+            > sera la première au courant.
+          </p>
+          <p>
+            Questions sur une réservation ou une carte-cadeau ? Tout est dans la <a
+              class="lien"
+              href="/a-propos/faq/#reserver">FAQ</a
+            >.
+          </p>
+        </div>
+
+        {
+          kota && (
+            <a class="kota" href={`/partenaires/#${kota.id}`}>
+              {kota.data.logo && (
+                <span class="kota-logo" style={`--fond: ${kota.data.logoFond}`}>
+                  <Image
+                    src={kota.data.logo}
+                    alt=""
+                    width={96}
+                    height={96}
+                    densities={[1, 2]}
+                    fit="contain"
+                    loading="lazy"
+                  />
+                </span>
+              )}
+              <span class="kota-texte">
+                <span class="mono">Pour enregistrer, mixer et masteriser</span>
+                <strong>Découvre {kota.data.nom}</strong>
+                <span>
+                  Un studio de Québec avec qui on collabore. Pour ton prochain projet, c’est là
+                  qu’on t’envoie.
+                </span>
+                <span class="kota-lien">
+                  Voir le partenaire <span aria-hidden="true">→</span>
+                </span>
+              </span>
+            </a>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ APPEL FINAL ═════════ -->
+  <section class="appel" aria-labelledby="h-appel">
+    <div class="wrap">
+      <h2 id="h-appel">Une idée, une collab, une question ?</h2>
+      <div class="actions">
+        <a class="btn btn-p" href="/a-propos/contact/">Nous écrire</a>
+        <a class="btn btn-g" href="/a-propos/faq/">Lire la FAQ</a>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  .histoire { padding-top: 40px; }
+  .grille {
+    display: grid;
+    gap: 28px;
+  }
+  @media (min-width: 960px) {
+    .grille {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 56px;
+      align-items: end;
+    }
+  }
+  .texte { min-width: 0; }
+  .texte p {
+    margin: 0 0 14px;
+    max-width: 40rem;
+    color: var(--doux);
+    font-size: 1.05rem;
+    line-height: 1.65;
+  }
+
+  .reperes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--ligne);
+  }
+  .reperes li {
+    display: grid;
+    gap: 2px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--ligne);
+    font-weight: 600;
+  }
+  .reperes .mono { color: var(--cyan); }
+
+  /* ---------- Le lieu ---------- */
+  .photos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 800px) {
+    .photos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .photos :global(img) {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid var(--ligne);
+  }
+  .rdv {
+    margin: 16px 0 0;
+    color: var(--doux);
+  }
+
+  /* ---------- Fondateurs ---------- */
+  .fondateurs { background: var(--abysse); }
+  /* 4 colonnes dès 360 px : les quatre initiales restent sur une ligne. */
+  .initiales {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 132px));
+    gap: clamp(10px, 3vw, 40px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rond {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--ligne);
+    color: var(--texte);
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 800;
+    font-variation-settings: "wdth" 80;
+    letter-spacing: .02em;
+  }
+  .rond.clair { color: var(--encre); }
+  .annonce {
+    margin: 24px 0 0;
+    max-width: 40rem;
+    color: var(--doux);
+    line-height: 1.6;
+  }
+  .annonce strong { color: var(--texte); }
+  .pastille {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--glace);
+    color: var(--encre);
+  }
+
+  /* ---------- Séances ---------- */
+  .boite {
+    display: grid;
+    gap: 28px;
+    padding: clamp(20px, 4vw, 48px);
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--abysse);
+  }
+  @media (min-width: 960px) {
+    .boite {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 48px;
+      align-items: center;
+    }
+  }
+  .surtitre {
+    margin: 0;
+    color: var(--cyan);
+  }
+  .boite h2 {
+    margin: 6px 0 12px;
+    font-size: clamp(1.9rem, 5vw, 3.1rem);
+    line-height: .95;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  .statut {
+    margin: 0 0 16px;
+    color: #ffd27a;
+  }
+  .boite p:not(.surtitre):not(.statut) {
+    margin: 0 0 12px;
+    color: var(--doux);
+    line-height: 1.6;
+  }
+
+  /* Mobile : logo au-dessus du texte ; côte à côte dès 480 px. */
+  .kota {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid var(--contour);
+    background: var(--carte);
+    color: var(--texte);
+    text-decoration: none;
+  }
+  @media (min-width: 480px) {
+    .kota { flex-direction: row; }
+  }
+  .kota:hover { border-color: var(--glace); }
+  .kota-logo {
+    flex: none;
+    width: 72px;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--fond);
+  }
+  .kota-logo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .kota-texte {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+  .kota-texte .mono { color: var(--cyan); }
+  .kota-texte strong { font-size: 1.3rem; line-height: 1.15; }
+  .kota-texte > span:not(.mono):not(.kota-lien) { color: var(--doux); line-height: 1.5; }
+  .kota-lien {
+    margin-top: 4px;
+    color: var(--glace);
+    font-weight: 600;
+  }
+
+  /* ---------- Appel final ---------- */
+  .appel { text-align: center; }
+  .appel h2 {
+    margin: 0 0 20px;
+    font-size: clamp(1.9rem, 5vw, 3.1rem);
+    line-height: .95;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+</style>

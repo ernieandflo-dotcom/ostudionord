@@ -1,0 +1,215 @@
+---
+// FAQ : /a-propos/faq/ (cible de la redirection de booking.html → /a-propos/faq/#reserver, étape j).
+// Phase : P1 (étape h)
+//
+// Questions : collection `faq` (un .md par question dans src/content/faq/), regroupées par
+// catégorie (ordre et titres dans src/lib/faq.ts). Chaque question est un <details>/<summary> :
+// l'accordéon natif du navigateur, sans JavaScript, utilisable au clavier (Tab, puis Entrée).
+// L'id de chaque question est le nom de son fichier : /a-propos/faq/#reserver.
+//
+// Données structurées FAQPage (JSON-LD) générées depuis la même collection. Google n'affiche
+// plus de résultats enrichis FAQ depuis mai 2026, mais continue de lire ces données pour
+// comprendre la page : rien à écrire deux fois, donc on les garde.
+import { getCollection, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import SousNav from '../../components/SousNav.astro';
+import { SOUS_NAV_A_PROPOS } from '../../data/site';
+import { CATEGORIES_FAQ, TITRES_CATEGORIES, parOrdre, texteBrut } from '../../lib/faq';
+
+const questions = await getCollection('faq');
+
+const groupes = await Promise.all(
+  CATEGORIES_FAQ.map(async (cat) => {
+    const liste = questions.filter((q) => q.data.categorie === cat).sort(parOrdre);
+    return {
+      cat,
+      titre: TITRES_CATEGORIES[cat],
+      questions: await Promise.all(
+        liste.map(async (q) => ({ q, Contenu: (await render(q)).Content })),
+      ),
+    };
+  }),
+).then((g) => g.filter((x) => x.questions.length > 0));
+
+// « Est-ce que je peux réserver… » ouverte d'emblée : c'est la question des visiteurs
+// redirigés depuis l'ancienne page de réservation (booking.html).
+const OUVERTE = 'reserver';
+
+// ---------- Données structurées (JSON-LD, schema.org FAQPage) ----------
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: groupes
+    .flatMap((g) => g.questions)
+    .map(({ q }) => ({
+      '@type': 'Question',
+      name: q.data.question,
+      acceptedAnswer: { '@type': 'Answer', text: texteBrut(q.rendered?.html ?? '') },
+    })),
+};
+// « < » échappé : le texte ne peut pas fermer la balise <script> par accident.
+const jsonLd = JSON.stringify(faqLd).replace(/</g, '\\u003c');
+---
+
+<Page
+  title="FAQ"
+  surtitre="À propos · Questions fréquentes"
+  intro="Séances, collaborations, cartes-cadeaux, merch : les réponses aux questions qu’on reçoit le plus souvent."
+  description="Questions fréquentes sur Studio Nord : réservation de séances, collaborations, cartes-cadeaux, VIP Pass, merch, beats et données personnelles."
+>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
+  </Fragment>
+
+  <SousNav slot="sous-nav" liens={SOUS_NAV_A_PROPOS} label="Pages À propos" />
+
+  <section aria-label="Questions fréquentes">
+    <div class="wrap">
+      <nav class="sommaire" aria-label="Catégories de la FAQ">
+        <ul role="list">
+          {
+            groupes.map((g) => (
+              <li>
+                <a class="chip" href={`#${g.cat}`}>
+                  {g.titre}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      {
+        groupes.map((g) => (
+          <div class="groupe" id={g.cat}>
+            <h2>{g.titre}</h2>
+            <div class="liste">
+              {g.questions.map(({ q, Contenu }) => (
+                <details id={q.id} open={q.id === OUVERTE}>
+                  <summary>
+                    <span class="q">{q.data.question}</span>
+                    <span class="signe" aria-hidden="true" />
+                  </summary>
+                  <div class="reponse">
+                    <Contenu />
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+
+      <div class="fin">
+        <p>Tu ne trouves pas ta réponse ?</p>
+        <a class="btn btn-p" href="/a-propos/contact/">Écris-nous</a>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section { padding-top: 32px; }
+
+  .sommaire ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+  }
+  .sommaire .chip { text-decoration: none; }
+  .sommaire .chip:hover { border-color: var(--glace); }
+
+  .groupe {
+    padding-top: 32px;
+    scroll-margin-top: 90px; /* l'en-tête collant ne cache pas le titre visé */
+  }
+  .groupe h2 {
+    margin: 0 0 14px;
+    font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  .liste { border-top: 1px solid var(--ligne); }
+
+  details {
+    border-bottom: 1px solid var(--ligne);
+    scroll-margin-top: 90px;
+  }
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 56px;
+    padding: 14px 4px;
+    cursor: pointer;
+    list-style: none; /* retire le triangle natif (Firefox, Chrome) */
+    font-weight: 700;
+    font-size: 1.08rem;
+    line-height: 1.3;
+  }
+  summary::-webkit-details-marker { display: none; } /* Safari */
+  summary:hover .q { color: var(--glace); }
+  .q { min-width: 0; overflow-wrap: anywhere; }
+
+  /* Signe + / − dessiné en CSS */
+  .signe {
+    position: relative;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--contour);
+  }
+  .signe::before,
+  .signe::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 2px;
+    margin: -1px 0 0 -6px;
+    background: var(--cyan);
+    transition: transform .2s;
+  }
+  .signe::after { transform: rotate(90deg); }
+  details[open] .signe::after { transform: rotate(0deg); }
+
+  .reponse {
+    max-width: 46rem;
+    padding: 0 4px 20px;
+    color: var(--doux);
+    line-height: 1.6;
+  }
+  .reponse :global(p) { margin: 0 0 12px; }
+  .reponse :global(p:last-child) { margin-bottom: 0; }
+  .reponse :global(ul) { margin: 0 0 12px; padding-left: 1.2em; }
+  .reponse :global(li) { margin-bottom: 4px; }
+  .reponse :global(strong) { color: var(--texte); }
+  .reponse :global(a) {
+    color: var(--glace);
+    font-weight: 600;
+    text-underline-offset: 3px;
+  }
+
+  .fin {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 20px;
+    margin-top: 40px;
+    padding: 22px clamp(18px, 3vw, 32px);
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--abysse);
+  }
+  .fin p {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.15rem;
+  }
+</style>

@@ -1,8 +1,9 @@
 // Schémas des collections de contenu (artistes, createurs, sorties, beats, partenaires,
-// merch, cartesCadeaux).
+// merch, cartesCadeaux, faq).
 // Déclaration : defineCollection() + loader glob() (astro/loaders) + z (astro/zod).
 // Phase : P1 (étape a ; sorties revues aux étapes b, c et d ; horaire des créateurs à l'étape e ;
-// merch, cartes-cadeaux et .strict() à l'étape f ; partenaires revus à l'étape g)
+// merch, cartes-cadeaux et .strict() à l'étape f ; partenaires revus à l'étape g ;
+// faq à l'étape h)
 //
 // Un schéma décrit les champs attendus dans le frontmatter de chaque .md.
 // Champ manquant ou mal écrit = erreur claire au `npm run dev` ou au build,
@@ -14,6 +15,7 @@
 import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { CATEGORIES_FAQ } from './lib/faq';
 
 // ---------- Morceaux réutilisés ----------
 
@@ -339,6 +341,23 @@ const cartesCadeaux = defineCollection({
       .refine((d) => !d.visuel || d.visuelAlt, altObligatoire('visuel')),
 });
 
+// FAQ (page /a-propos/faq/). Un .md par question ; la réponse s'écrit en Markdown
+// sous le second `---` (liens permis). Le nom du fichier donne l'ancre : reserver.md →
+// /a-propos/faq/#reserver.
+// Phase : P1 (étape h)
+const faq = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/faq' }),
+  schema: z
+    .object({
+      question: z.string(),
+      // Valeurs, titres et ordre des catégories : src/lib/faq.ts
+      categorie: z.enum(CATEGORIES_FAQ),
+      // Ordre dans la catégorie : petit = en premier.
+      ordre: z.number().int().default(100),
+    })
+    .strict(),
+});
+
 export const collections = {
   partenaires,
   artistes,
@@ -347,4 +366,5 @@ export const collections = {
   beats,
   merch,
   cartesCadeaux,
+  faq,
 };

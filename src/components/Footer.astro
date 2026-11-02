@@ -1,7 +1,14 @@
 ---
 // Pied de page : coordonnées, navigation secondaire, réseaux, mentions.
-// Phase : P1 (étape a)
+// Phase : P1 (étape a ; Contact et FAQ à l'étape h)
 import { SITE, NAVIGATION, DISCORD, COURRIEL, ADRESSE, reseauxActifs } from '../data/site';
+
+// Navigation du pied : le menu principal, plus Contact et FAQ (sous-pages d'À propos, étape h).
+const liensPied = [
+  ...NAVIGATION,
+  { label: 'Contact', href: '/a-propos/contact/' },
+  { label: 'FAQ', href: '/a-propos/faq/' },
+];
 
 const annee = new Date().getFullYear();
 const reseaux = [{ nom: 'Discord', url: DISCORD }, ...reseauxActifs];
@@ -18,7 +25,7 @@ const reseaux = [{ nom: 'Discord', url: DISCORD }, ...reseauxActifs];
     </div>
 
     <nav aria-label="Pied de page">
-      {NAVIGATION.map((item) => <a href={item.href}>{item.label}</a>)}
+      {liensPied.map((item) => <a href={item.href}>{item.label}</a>)}
     </nav>
 
     <ul class="reseaux" aria-label="Réseaux sociaux">

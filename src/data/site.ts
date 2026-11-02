@@ -17,7 +17,15 @@ export const NAVIGATION = [
   { label: 'Créateurs', href: '/createurs/' },
   { label: 'Boutique', href: '/boutique/' },
   { label: 'Partenaires', href: '/partenaires/' },
-  { label: 'Contact', href: '/contact/' },
+  { label: 'À propos', href: '/a-propos/' },
+] as const;
+
+// Sous-navigation des pages « À propos » (étape h) : sous le titre des 3 pages.
+// Contact et FAQ sont aussi ajoutés au pied de page (Footer).
+export const SOUS_NAV_A_PROPOS = [
+  { label: 'Le studio', href: '/a-propos/' },
+  { label: 'Contact', href: '/a-propos/contact/' },
+  { label: 'FAQ', href: '/a-propos/faq/' },
 ] as const;
 
 export const DISCORD = 'https://discord.gg/kTXP3u4tdQ';

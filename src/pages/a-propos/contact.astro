@@ -1,0 +1,169 @@
+---
+// Contact : /a-propos/contact/ (remplace /contact/, redirigé à l'étape j). Tutoiement.
+// Phase : P1 (étape h)
+//
+// Boîte en deux colonnes, comme le formulaire de /partenaires/ :
+//   - à gauche : coordonnées (courriel, adresse, Discord, réseaux), renvoi partenariat, FAQ ;
+//   - à droite : FormContact (Formspree).
+// Visites du studio : sur rendez-vous seulement.
+import Page from '../../layouts/Page.astro';
+import SousNav from '../../components/SousNav.astro';
+import FormContact from '../../components/FormContact.astro';
+import { SOUS_NAV_A_PROPOS, COURRIEL, ADRESSE, DISCORD, reseauxActifs } from '../../data/site';
+
+const reseaux = [{ nom: 'Discord', url: DISCORD }, ...reseauxActifs];
+---
+
+<Page
+  title="Contact"
+  surtitre="À propos · Contact"
+  intro="Une collab, une idée de contenu, une question de média ? Écris-nous : on lit tout et on te répond par courriel."
+  description="Écrire à Studio Nord, studio de création de Limoilou (Québec) : collaborations d’artistes, de beatmakers et de créateurs, médias, propositions de contenu."
+>
+  <SousNav slot="sous-nav" liens={SOUS_NAV_A_PROPOS} label="Pages À propos" />
+
+  <section aria-labelledby="h-ecrire">
+    <div class="wrap">
+      <div class="boite">
+        <div class="coord">
+          <p class="mono surtitre">Coordonnées</p>
+          <h2 id="h-ecrire">Écris-nous</h2>
+
+          <dl>
+            <div>
+              <dt class="mono">Courriel</dt>
+              <dd><a class="lien" href={`mailto:${COURRIEL}`}>{COURRIEL}</a></dd>
+            </div>
+            <div>
+              <dt class="mono">Studio</dt>
+              <dd>
+                <address>
+                  {ADRESSE.rue}<br />
+                  {ADRESSE.quartier}, {ADRESSE.ville} ({ADRESSE.province}) {ADRESSE.codePostal}
+                </address>
+                <span class="note">Visites sur rendez-vous seulement : écris-nous avant de passer.</span>
+              </dd>
+            </div>
+            <div>
+              <dt class="mono">Communauté</dt>
+              <dd>
+                <ul class="reseaux" aria-label="Studio Nord en ligne">
+                  {
+                    reseaux.map((r) => (
+                      <li>
+                        <a href={r.url} target="_blank" rel="noopener">
+                          {r.nom}
+                          <span class="sr"> (nouvel onglet)</span>
+                        </a>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </dd>
+            </div>
+          </dl>
+
+          <div class="encadre">
+            <p>
+              <strong>Tu représentes une entreprise ou un organisme ?</strong> Les propositions de
+              partenariat ont leur propre formulaire.
+            </p>
+            <a class="lien" href="/partenaires/#partenariat">
+              Faire une demande de partenariat <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
+          <p class="faq">
+            Ta question est peut-être déjà dans la <a class="lien" href="/a-propos/faq/">FAQ</a>.
+          </p>
+        </div>
+
+        <div class="formulaire">
+          <h2 class="sr">Formulaire de contact</h2>
+          <FormContact />
+        </div>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  section { padding-top: 32px; }
+  .boite {
+    display: grid;
+    gap: 32px;
+    padding: clamp(20px, 4vw, 48px);
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: var(--abysse);
+  }
+  @media (min-width: 960px) {
+    .boite {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+      gap: 48px;
+    }
+  }
+  .coord { min-width: 0; }
+  .surtitre {
+    margin: 0;
+    color: var(--cyan);
+  }
+  .coord h2 {
+    margin: 6px 0 18px;
+    font-size: clamp(1.9rem, 5vw, 3.1rem);
+    line-height: .95;
+    font-weight: 800;
+    font-variation-settings: "wdth" 82;
+  }
+  dl {
+    display: grid;
+    gap: 18px;
+    margin: 0;
+  }
+  dt { color: var(--doux); margin-bottom: 4px; }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  address { font-style: normal; }
+  .note {
+    display: block;
+    margin-top: 4px;
+    color: var(--doux);
+    font-size: .9rem;
+  }
+  .reseaux {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .reseaux a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--contour);
+    color: var(--texte);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .reseaux a:hover { border-color: var(--glace); }
+  .encadre {
+    margin-top: 26px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--ligne);
+    background: var(--carte);
+  }
+  .encadre p {
+    margin: 0 0 10px;
+    color: var(--doux);
+    line-height: 1.5;
+  }
+  .encadre strong { color: var(--texte); }
+  .faq {
+    margin: 18px 0 0;
+    color: var(--doux);
+  }
+</style>

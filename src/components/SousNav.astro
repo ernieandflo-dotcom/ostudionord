@@ -1,0 +1,63 @@
+---
+// Sous-navigation en pastilles, sans JavaScript (pages À propos · Contact · FAQ).
+// Phase : P1 (étape h)
+//
+// Générique : reçoit une liste de liens et un nom pour les lecteurs d'écran.
+// La pastille de la page affichée reçoit aria-current="page" (annoncé « page actuelle »).
+// Les pastilles passent à la ligne au besoin : aucun défilement horizontal, même à 360 px.
+// S'utilise dans Page.astro avec l'emplacement nommé « sous-nav » :
+//   <SousNav slot="sous-nav" liens={SOUS_NAV_A_PROPOS} label="Pages À propos" />
+
+interface Props {
+  liens: readonly { label: string; href: string }[];
+  /** Nom de la navigation pour les lecteurs d'écran (aria-label). */
+  label: string;
+}
+
+const { liens, label } = Astro.props;
+const chemin = Astro.url.pathname;
+---
+
+<nav class="sous-nav" aria-label={label}>
+  <ul role="list">
+    {
+      liens.map((l) => (
+        <li>
+          <a href={l.href} aria-current={chemin === l.href ? 'page' : undefined}>
+            {l.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .sous-nav { margin-top: 22px; }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px solid var(--contour);
+    color: var(--texte);
+    font-weight: 600;
+    font-size: .95rem;
+    text-decoration: none;
+  }
+  a:hover { border-color: var(--glace); }
+  a[aria-current="page"] {
+    background: var(--glace);
+    border-color: var(--glace);
+    color: var(--encre);
+  }
+</style>

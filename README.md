@@ -15,8 +15,12 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 - [ ] **Bios des artistes et des créateurs** : remplacer le lorem ipsum sous le second `---`
       de chaque `src/content/artistes/*.md` et `src/content/createurs/*.md` (et ajouter une `accroche` au besoin). Tant que ce n'est pas
       fait, `npm run build` affiche « bio en lorem ipsum ».
-- [ ] **Formspree** : créer le formulaire « Partenariat » et remplacer l'adresse
-      `REMPLACER_PARTENARIAT` dans `src/lib/formulaires.ts` (voir « Formulaires » plus bas).
+- [ ] **Formspree** : créer les formulaires « Partenariat » et « Contact », puis remplacer
+      `REMPLACER_PARTENARIAT` et `REMPLACER_CONTACT` dans `src/lib/formulaires.ts`
+      (voir « Formulaires » plus bas).
+- [ ] **À propos** : relire les textes de `src/pages/a-propos/index.astro`, puis passer
+      `TEXTES_A_VALIDER` à `false`. Tant que ce n'est pas fait, `npm run build` affiche
+      « textes de /a-propos/ en brouillon ».
 - [ ] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
       et Branche-Toi, et leur accord pour l'image de partage (mosaïque des logos).
 
@@ -128,6 +132,25 @@ ordre: 30                       # petit = en premier
 L'encadré « Géré par » de sa fiche renvoie au lien principal du partenaire
 (site, sinon YouTube, Instagram, Facebook, TikTok).
 
+### Ajouter une question à la FAQ
+
+Créer `src/content/faq/<slug>.md` : la question apparaît sur `/a-propos/faq/`, avec l'ancre
+`/a-propos/faq/#<slug>`. La réponse s'écrit en Markdown sous le second `---` (liens permis).
+
+```yaml
+---
+question: "Est-ce que je peux réserver une séance d'enregistrement ?"
+categorie: studio   # studio | collaborations | boutique | donnees
+ordre: 10           # petit = en premier dans sa catégorie
+---
+
+Réponse en Markdown, avec un [lien](/a-propos/contact/).
+```
+
+Titres et ordre des catégories : `src/lib/faq.ts` (`CATEGORIES_FAQ`, `TITRES_CATEGORIES`).
+Les données structurées FAQPage (JSON-LD) se génèrent d'elles-mêmes.
+Ne pas renommer `reserver.md` : c'est la cible de la redirection de `booking.html`.
+
 ### Sous-titres (vidéos R2)
 
 Fichier WebVTT (`.vtt`) envoyé dans R2 à côté de la vidéo, puis déclaré dans la sortie :
@@ -139,7 +162,11 @@ ne s'affichent pas et la vidéo peut refuser de jouer.
 ## Formulaires
 
 - **Brevo** (infolettre, beats, drop) : `src/components/FormInfolettre.astro`.
-- **Formspree** (partenariat ; contact à l'étape h) : adresses dans `src/lib/formulaires.ts`.
+- **Formspree** : adresses dans `src/lib/formulaires.ts`.
+  - « partenariat » : `FormPartenariat` sur `/partenaires/#partenariat` (vouvoiement) ;
+  - « contact » : `FormContact` sur `/a-propos/contact/` (tutoiement). Sujets regroupés
+    (Collaboration, Studio Nord, Autre) : liste `SUJETS` dans le composant. Les partenariats
+    n'y sont pas : la page renvoie vers `/partenaires/#partenariat`.
   Honeypot `_gotcha`, objet du courriel `_subject`, consentement obligatoire. Aucun JavaScript.
 - **Forfait gratuit de Formspree (P1)** : 50 envois par mois ; après l'envoi, le visiteur voit
   la page de remerciement de Formspree, pas `/merci/` (la redirection est réservée aux
