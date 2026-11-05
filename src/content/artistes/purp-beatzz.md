@@ -16,6 +16,6 @@ liens:
 # ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
 ---
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+Je fais des beats, je crée des mélodies et je donne vie aux idées des artistes. J’ai essayé d’avoir une vie normale, mais le piano sonnait mieux…
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Je ne suis probablement pas le meilleur producteur au monde. Reste que j’ai pas encore rencontré tout le monde. Donc, le débat reste ouvert.
