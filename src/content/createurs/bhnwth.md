@@ -28,9 +28,8 @@ partenaire: gt-media
 #       debut: "14:00"
 #       fin: "17:00"
 #   note: L'horaire peut changer ; les annonces passent sur Instagram.
-# Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
 ---
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+Bighead-quoi? Bigheadednesswiththehyphen ou, la version courte,  Bigheadnesswiththehypen. Bon... Big-head Ness ou BHN, ça passe.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Bref, on découvre de la musique on crée des souvenirs et... on vibe en vrai. Rien de trop compliqué. (Bah... dès fois, il y a des fichiers excel ou un peu de code, mais sinon rien de compliqué.) 

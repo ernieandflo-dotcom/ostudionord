@@ -18,4 +18,4 @@ liens:
 
 Je fais des beats, je crée des mélodies et je donne vie aux idées des artistes. J’ai essayé d’avoir une vie normale, mais le piano sonnait mieux…
 
-Je ne suis probablement pas le meilleur producteur au monde. Reste que j’ai pas encore rencontré tout le monde. Donc, le débat reste ouvert.
+J'suis probablement pas le meilleur producteur au monde, mais j’ai pas encore rencontré tout le monde. Donc, le débat reste ouvert.

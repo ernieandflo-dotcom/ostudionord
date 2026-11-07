@@ -7,7 +7,7 @@ genres: [Afrobeats, "Hip-hop/Rap", "R&B", Pop, Rumba congolaise, Trap, Afro-cari
 initiales: DF
 # accroche: Une phrase pour les cartes et le partage (sinon, description générée).
 portrait: ../../assets/artistes/don-fenom.jpg
-portraitAlt: "Logo Nox"
+portraitAlt: "Portrait Don Fenom"
 liens:
   instagram: https://www.instagram.com/thedonfenom/
   spotify: https://open.spotify.com/artist/3BAkcRDIkjDLRuBdrPGtI4

@@ -12,6 +12,7 @@ liens:
   instagram: https://www.instagram.com/molie.singer/
   spotify: https://open.spotify.com/artist/3ayexZ8ctEwr8kucxY8DqU
   youtube: https://www.youtube.com/@joyfuljudie
+  tiktok: https://www.tiktok.com/@joyful_judie
 # Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
 # ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
 ---
