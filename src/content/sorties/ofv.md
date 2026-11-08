@@ -7,5 +7,5 @@ date: 2026-07-28
 artistes: [molie]
 youtubeId: gQxgzxCWyzU
 vignette: ../../assets/sorties/ofv.jpg
-vignetteAlt: "Pochette d’OFV : Mølie entourée de mains, sur fond sombre"
+vignetteAlt: "Scène intro Molie de dos et texte O.F.V. en rouge."
 ---
