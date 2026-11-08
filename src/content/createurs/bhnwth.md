@@ -32,4 +32,6 @@ partenaire: gt-media
 
 Bighead-quoi? Bigheadednesswiththehyphen ou, la version courte,  Bigheadnesswiththehypen. Bon... Big-head Ness ou BHN, ça passe.
 
-Bref, on découvre de la musique on crée des souvenirs et... on vibe en vrai. Rien de trop compliqué. (Bah... dès fois, il y a des fichiers excel ou un peu de code, mais, sinon, rien de compliqué.) 
+Bref, on découvre de la musique, on lance des projets, on crée des souvenirs et... on vibe en vrai. Rien de trop compliqué. (Bah... dès fois, il y a des fichiers excel ou un peu de code, mais, sinon, rien de compliqué.) 
+
+Passe faire un tour.

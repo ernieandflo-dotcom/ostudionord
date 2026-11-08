@@ -14,7 +14,8 @@ liens:
   youtube: https://www.youtube.com/@ness_grossetete
   site: https://grossetete.ca/
 partenaire: gt-media
-# ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
+
+ordre: 5
 ---
 
 Parfois poète ou écrivain, d'autres fois rappeur et interprète, peut-être avant tout un conteur d'histoires; quand on apprend à le connaître, on comprend que tout ce qu'il fait vraiment et tout ce qu'il a toujours voulu faire, c'est de jouer. Les mots font tout simplement parti de ses jouets préférés.

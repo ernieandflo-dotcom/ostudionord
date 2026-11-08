@@ -3,7 +3,7 @@
 # Phase : P1 (étape d)
 nom: Mølie
 role: artiste
-genres: [Pop, "R&B", Hip-hop]
+genres: [Pop, "R&B", Afro-caribéen]
 initiales: MØ
 # accroche: Une phrase pour les cartes et le partage (sinon, description générée).
 portrait: ../../assets/artistes/molie.jpg
@@ -13,10 +13,12 @@ liens:
   spotify: https://open.spotify.com/artist/3ayexZ8ctEwr8kucxY8DqU
   youtube: https://www.youtube.com/@joyfuljudie
   tiktok: https://www.tiktok.com/@joyful_judie
-# Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
-# ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
+
+ordre: 3
 ---
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+Mølie est une auteure-compositrice-interprète d’origine haïtienne basée à Québec, dont l’univers musical se nourrit de ses racines, de ses expériences et de sa passion pour les différentes formes d’art.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+À travers une identité musicale qui navigue entre la pop, le R&B et les sonorités afro-caribéennes, Mølie aime repousser les frontières des genres. Sa musique se distingue par son approche mélodique, sa sensibilité émotionnelle et sa volonté de raconter des histoires dans lesquelles se mêlent vulnérabilité, sensualité, affirmation de soi et liberté. 
+
+Pour Mølie, la musique est bien plus qu’un moyen de s’exprimer : c’est une façon de raconter la vie, de mettre des mots sur l’invisible et de créer des liens à travers les émotions. Une artiste en constante exploration, qui souhaite avant tout faire de chaque chanson une nouvelle pièce de son histoire.

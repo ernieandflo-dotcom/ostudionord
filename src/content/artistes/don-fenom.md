@@ -13,8 +13,8 @@ liens:
   spotify: https://open.spotify.com/artist/3BAkcRDIkjDLRuBdrPGtI4
   youtube: https://www.youtube.com/@TheDonFenom
   appleMusic: https://music.apple.com/ca/artist/don-fenom/1428832921
-# Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
-# ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
+
+ordre: 1 
 ---
 
 Don Fenom, de son nom artistique complet Don TrouBlesome Fenom, est un artiste d’origine congolaise basé à Québec, au Canada.

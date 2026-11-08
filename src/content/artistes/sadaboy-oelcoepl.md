@@ -14,8 +14,8 @@ liens:
   youtube: https://www.youtube.com/@SadaboyOELCOEPL
   appleMusic: https://music.apple.com/us/artist/sadaboy-oelcoepl/1763184939
   tiktok: https://www.tiktok.com/@sadaboy.oelcoepl
-# Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
-# ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
+
+ordre: 2
 ---
 
 Sadaboy est un artiste qui transforme les blessures en mélodies et le silence en textes bruts. Sur des productions atmosphériques, sombres et mélodiques, il partage son vécu avec authenticité, émotion et profondeur. Accompagné de son instrument de prédilection, le violon, et de son instrument de cœur, la guitare, il donne vie à un univers où chaque note porte une histoire.
