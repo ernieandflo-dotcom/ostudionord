@@ -12,7 +12,7 @@ liens:
   instagram: https://www.instagram.com/purpbeatzz/
   youtube: https://www.youtube.com/@Purpbeatzz
   site: https://purpbeatzz.com/
-# Bio : le texte sous le « --- » (Markdown). LOREM IPSUM À REMPLACER avant la mise en ligne.
+
 # ordre: 1   (facultatif : épingle l'artiste en tête ; sinon ordre alphabétique)
 ---
 
