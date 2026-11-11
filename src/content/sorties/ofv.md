@@ -7,5 +7,5 @@ date: 2026-07-28
 artistes: [molie]
 youtubeId: gQxgzxCWyzU
 vignette: ../../assets/sorties/ofv.jpg
-vignetteAlt: "Scène intro Molie de dos et texte O.F.V. en rouge."
+vignetteAlt: "Scène intro Mølie de dos et texte O.F.V. en rouge."
 ---
