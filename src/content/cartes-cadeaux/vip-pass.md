@@ -1,6 +1,6 @@
 ---
 # VIP Pass : accès à tous les événements en personne de Studio Nord pendant un an
-# Phase : P1 (étape f) · prix temporaire · quota à l'étape h.1
+# Phase : P1 (étape f) · prix confirmé (100 $, 10 novembre 2026) · quota à l'étape h.1
 nom: VIP Pass
 genre: pass # montant | service | pass
 prix: 100
