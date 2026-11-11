@@ -1,33 +1,21 @@
 ---
 // Index des créateurs de contenu et live streaming : /createurs/
-// Phase : P1 (étape e)
+// Phase : P1 (étape e) · refonte visuelle à l'étape l
 //
-// Une carte large par créateur (avec un seul créateur, une grille d'avatars aurait l'air vide) :
-// portrait, nom, pseudo, catégories, pastille « En live » selon l'horaire, bouton de diffusion,
-// partenaire, lien vers la fiche. 2 colonnes sur ordinateur dès qu'il y a plusieurs créateurs.
+// Même look que la section « Les artistes » de /artistes/ : surtitre « Créateur de contenu »,
+// h2 « Les créateurs », grille d'avatars ronds (CarteArtiste, classe globale .grille-av).
+// Carte : portrait, nom, catégories, et pastille « En live » (selon l'horaire) quand le
+// créateur a un horaire. Le pseudo, « Géré par … » et le bouton « Regarder sur … » sont sur
+// la fiche seulement (une carte est un seul lien : pas de bouton à l'intérieur).
 // Bandeaux : « Tu crées du contenu ? » (Discord) et renvoi vers /artistes/.
-import { getCollection, getEntry } from 'astro:content';
-import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import Page from '../../layouts/Page.astro';
+import CarteArtiste from '../../components/CarteArtiste.astro';
 import StatutLive from '../../components/StatutLive.astro';
 import { DISCORD } from '../../data/site';
-import {
-  DEGRADES,
-  DEGRADE_PALE,
-  liensCreateur,
-  parOrdre,
-  sousTitreCreateur,
-} from '../../lib/personnes';
+import { parOrdre, sousTitreCreateur } from '../../lib/personnes';
 
-const createurs = await Promise.all(
-  (await getCollection('createurs')).sort(parOrdre).map(async (c, i) => ({
-    c,
-    liens: liensCreateur(c),
-    partenaire: c.data.partenaire ? await getEntry(c.data.partenaire) : undefined,
-    fond: DEGRADES[i % DEGRADES.length],
-    clair: i % DEGRADES.length === DEGRADE_PALE,
-  })),
-);
+const createurs = (await getCollection('createurs')).sort(parOrdre);
 ---
 
 <Page
@@ -36,60 +24,30 @@ const createurs = await Promise.all(
   intro="Live streaming, divertissement : les créateurs de contenu qui tournent avec Studio Nord."
   description="Les créateurs de contenu de Studio Nord (Limoilou, Québec) : live streaming et divertissement, avec BHNWTH."
 >
-  <section aria-label="Liste des créateurs">
+  <section aria-labelledby="h-liste">
     <div class="wrap">
-      <ul class:list={['cartes', { plusieurs: createurs.length > 1 }]} role="list">
+      <div class="sec-h">
+        <div>
+          <span class="mono">Créateur de contenu</span>
+          <h2 id="h-liste">Les créateurs</h2>
+        </div>
+      </div>
+      <ul class="grille-av" role="list">
         {
-          createurs.map(({ c, liens, partenaire, fond, clair }) => {
-            const fiche = `/createurs/${c.id}/`;
-            const principal = liens.diffusion[0];
-            return (
-              <li class="carte">
-                <span
-                  class:list={['avatar', { clair }]}
-                  style={c.data.portrait ? undefined : `--bg: ${fond}`}
-                  aria-hidden="true"
-                >
-                  {c.data.portrait ? (
-                    <Image
-                      src={c.data.portrait}
-                      alt=""
-                      width={120}
-                      height={120}
-                      densities={[1, 2]}
-                      fit="cover"
-                    />
-                  ) : (
-                    c.data.initiales
-                  )}
-                </span>
-
-                <div class="corps">
-                  <h2>
-                    <a href={fiche}>{c.data.nom}</a>
-                  </h2>
-                  {c.data.pseudo && <p class="mono pseudo">{c.data.pseudo}</p>}
-                  {c.data.categories.length > 0 && <p class="cat">{sousTitreCreateur(c)}</p>}
-                  {c.data.horaire && <StatutLive plages={c.data.horaire.plages} />}
-                  {partenaire && <p class="gere">Géré par {partenaire.data.nom}</p>}
-
-                  <div class="actions">
-                    {principal && (
-                      <a class="btn btn-p" href={principal.url} target="_blank" rel="noopener">
-                        Regarder sur {principal.nom}
-                        <span aria-hidden="true">↗</span>
-                        <span class="sr">(nouvel onglet)</span>
-                      </a>
-                    )}
-                    <a class="lien" href={fiche}>
-                      Voir sa fiche<span class="sr"> : {c.data.nom}</span>{' '}
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  </div>
-                </div>
-              </li>
-            );
-          })
+          createurs.map((c, i) => (
+            <li>
+              <CarteArtiste
+                href={`/createurs/${c.id}/`}
+                nom={c.data.nom}
+                sousTitre={sousTitreCreateur(c)}
+                initiales={c.data.initiales}
+                portrait={c.data.portrait}
+                variante={i}
+              >
+                {c.data.horaire && <StatutLive plages={c.data.horaire.plages} />}
+              </CarteArtiste>
+            </li>
+          ))
         }
       </ul>
     </div>
@@ -120,82 +78,19 @@ const createurs = await Promise.all(
 <style>
   section { padding: 32px 0; }
 
-  .cartes {
-    display: grid;
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  @media (min-width: 900px) {
-    .cartes.plusieurs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .cartes:not(.plusieurs) { max-width: 46rem; }
-  }
-
-  .carte {
-    position: relative;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 20px;
-    align-items: start;
-    padding: 20px;
-    border-radius: var(--r);
-    border: 1px solid var(--ligne);
-    background: var(--carte);
-    transition: border-color .2s;
-  }
-  .carte:hover { border-color: var(--cyan); }
-  @media (max-width: 480px) {
-    .carte { grid-template-columns: 1fr; }
-  }
-
-  .avatar {
-    display: grid;
-    place-items: center;
-    width: 120px;
-    height: 120px;
-    overflow: hidden;
-    border-radius: 50%;
-    border: 2px solid var(--ligne);
-    background: var(--bg, var(--carte));
-    color: var(--glace);
-    font-size: 1.8rem;
-    font-weight: 800;
-  }
-  .avatar.clair { color: var(--encre); }
-  .avatar :global(img) { width: 100%; height: 100%; object-fit: cover; }
-
-  .corps { min-width: 0; }
-  h2 {
-    margin: 0;
-    font-size: clamp(1.7rem, 5vw, 2.4rem);
-    line-height: 1;
-    font-weight: 800;
-    font-variation-settings: "wdth" 82;
-    overflow-wrap: anywhere;
-  }
-  h2 a { color: var(--texte); text-decoration: none; }
-  h2 a:hover { color: var(--glace); }
-  .pseudo {
-    margin: 6px 0 0;
-    color: var(--doux);
-    text-transform: none;
-    letter-spacing: .02em;
-    overflow-wrap: anywhere;
-  }
-  .cat { margin: 8px 0 0; color: var(--doux); }
-  .corps :global(statut-live) { margin-top: 10px; }
-  .gere {
-    margin: 10px 0 0;
-    color: var(--doux);
-    font-size: .88rem;
-  }
-  .actions {
-    display: flex;
+  /* Pastille « En live » dans une carte de 132 px : plus compacte, « selon l'horaire » dessous. */
+  .grille-av :global(statut-live) {
     flex-wrap: wrap;
-    align-items: center;
-    gap: 12px 18px;
-    margin-top: 16px;
+    justify-content: center;
+    gap: 2px 6px;
+    max-width: 132px;
+    padding: 3px 10px;
+    border-radius: 14px;
+    font-size: .8rem;
+  }
+  .grille-av :global(statut-live .selon) {
+    flex-basis: 100%;
+    font-size: .72rem;
   }
 
   .sec-bandeaux { padding-bottom: 64px; }

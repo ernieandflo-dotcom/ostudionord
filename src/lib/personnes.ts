@@ -31,9 +31,15 @@ export const ROLES: Record<Artiste['data']['role'], string> = {
   beatmaker: 'Beatmaker',
 };
 
-/** Ligne sous le nom sur les cartes : « Beatmaker », ou les deux premiers genres. */
+/** Les deux premiers genres, pour une carte : « Rap · Pop ». */
+export const genresCourts = (a: Artiste) => a.data.genres.slice(0, 2).join(' · ');
+
+/**
+ * Ligne sous le nom sur les cartes : « Beatmaker », ou les deux premiers genres.
+ * Sur /artistes/, la section « Le beatmaker » affiche plutôt genresCourts() (le rôle y est déjà dit).
+ */
 export function sousTitreArtiste(a: Artiste): string {
-  return a.data.role === 'beatmaker' ? ROLES.beatmaker : a.data.genres.slice(0, 2).join(' · ');
+  return a.data.role === 'beatmaker' ? ROLES.beatmaker : genresCourts(a);
 }
 
 // « Pop » → « pop », mais « R&B » reste « R&B ».

@@ -92,6 +92,18 @@ main > section { padding: 56px 0; }
 }
 .lien:hover { border-bottom-color: var(--glace); }
 
+/* Grille d'avatars ronds (CarteArtiste) : /artistes/, /createurs/ et blocs « autres » des fiches.
+   2 colonnes sur un petit téléphone, plus dès qu'il y a de la place. */
+.grille-av {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 28px 12px;
+  justify-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 /* En-tête de section : surtitre + titre, lien « Tout voir » à droite. */
 .sec-h {
   display: flex;

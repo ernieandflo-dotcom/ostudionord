@@ -1,14 +1,18 @@
 ---
 // Index des artistes et du beatmaker : /artistes/
-// Phase : P1 (étape d)
+// Phase : P1 (étape d) · refonte visuelle à l'étape l
 //
-// Deux sections : les artistes (role: artiste), puis le beatmaker (role: beatmaker).
+// Deux sections au même look : les artistes (role: artiste), puis le ou les beatmakers
+// (role: beatmaker), chacune en grille d'avatars ronds (CarteArtiste, classe globale .grille-av).
+// Sous-titre des cartes : les deux premiers genres (aussi pour un beatmaker : le rôle est déjà
+// dans le titre de section). « Écouter les beats → » mène à /boutique/#beats (tous les beats,
+// quel que soit le nombre de beatmakers) ; chaque fiche garde sa propre section #beats.
 // Tri : champ `ordre` si présent, sinon alphabétique (src/lib/personnes.ts).
 // Bandeau final vers /createurs/ (BHNWTH et les prochains).
 import { getCollection } from 'astro:content';
 import Page from '../../layouts/Page.astro';
 import CarteArtiste from '../../components/CarteArtiste.astro';
-import { genresEnTexte, parOrdre, sousTitreArtiste, type Artiste } from '../../lib/personnes';
+import { genresCourts, parOrdre, type Artiste } from '../../lib/personnes';
 
 const tous = (await getCollection('artistes')).sort(parOrdre);
 const artistes = tous.filter((a) => a.data.role === 'artiste');
@@ -39,7 +43,7 @@ const variante = (a: Artiste) => tous.indexOf(a);
               <CarteArtiste
                 href={`/artistes/${a.id}/`}
                 nom={a.data.nom}
-                sousTitre={sousTitreArtiste(a)}
+                sousTitre={genresCourts(a)}
                 initiales={a.data.initiales}
                 portrait={a.data.portrait}
                 variante={variante(a)}
@@ -59,29 +63,26 @@ const variante = (a: Artiste) => tous.indexOf(a);
             <div>
               <span class="mono">Production</span>
               <h2 id="h-beatmaker">{beatmakers.length > 1 ? 'Les beatmakers' : 'Le beatmaker'}</h2>
+              <p class="chapeau">
+                Les instrus de la maison. Chaque beat s'écoute en entier sur la fiche de son
+                beatmaker.
+              </p>
             </div>
+            <a class="lien" href="/boutique/#beats">
+              Écouter les beats <span aria-hidden="true">→</span>
+            </a>
           </div>
-          <ul class="beatmakers" role="list">
+          <ul class="grille-av" role="list">
             {beatmakers.map((b) => (
-              <li class="bm">
+              <li>
                 <CarteArtiste
                   href={`/artistes/${b.id}/`}
                   nom={b.data.nom}
-                  sousTitre={sousTitreArtiste(b)}
+                  sousTitre={genresCourts(b)}
                   initiales={b.data.initiales}
                   portrait={b.data.portrait}
                   variante={variante(b)}
                 />
-                <div class="bm-txt">
-                  <p>
-                    Les instrus de la maison
-                    {b.data.genres.length > 0 && <> : {genresEnTexte(b.data.genres)}</>}.
-                    Ses beats s'écoutent en entier sur sa fiche.
-                  </p>
-                  <a class="lien" href={`/artistes/${b.id}/#beats`}>
-                    Écouter ses beats <span aria-hidden="true">→</span>
-                  </a>
-                </div>
               </li>
             ))}
           </ul>
@@ -107,40 +108,10 @@ const variante = (a: Artiste) => tous.indexOf(a);
 <style>
   section { padding: 32px 0; }
 
-  /* Grille de cartes : 2 colonnes sur un petit téléphone, plus dès qu'il y a de la place. */
-  .grille-av {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-    gap: 28px 12px;
-    justify-items: center;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .beatmakers {
-    display: grid;
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .bm {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 20px;
-    max-width: 40rem;
-    padding: 18px;
-    border-radius: var(--r);
-    border: 1px solid var(--ligne);
-    background: var(--carte);
-  }
-  @media (max-width: 420px) {
-    .bm { grid-template-columns: 1fr; justify-items: center; text-align: center; }
-  }
-  .bm-txt p {
-    margin: 0 0 10px;
+  /* Phrase sous le titre de la section beatmaker. */
+  .chapeau {
+    margin: 10px 0 0;
+    max-width: 34rem;
     color: var(--doux);
   }
 

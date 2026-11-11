@@ -1,6 +1,6 @@
 # Studio Nord — Site 2.0 : stack et arborescence
 
-*Mise à jour : 2 novembre 2026 (étape k : revue de la liste de contrôle, cartes Séries de l'accueil avec image de fond, initiales des fondateurs DF, GT, SO, MK ; étape j : _redirects, _headers, CSP générée par Astro, plan du site, robots.txt, vérification finale ; étape i : /confidentialite/ (Loi 25), /merci/, /404, tirets cadratins remplacés et garde-fou au build ; étape h.1 : quota du VIP Pass, compteur hybride Stripe/manuel, intérêt « Autre vêtement » ; étape H terminée : /a-propos/ remplace /contact/ dans le menu, avec /a-propos/contact/ et /a-propos/faq/ ; sous-navigation commune ; collection `faq`) · Lancement visé : 8 novembre 2026*
+*Mise à jour : 10 novembre 2026 (étape l : /artistes/ et /createurs/ en grilles d'avatars ronds, classe commune `.grille-av` ; étape k : revue de la liste de contrôle, cartes Séries de l'accueil avec image de fond, initiales des fondateurs DF, GT, SO, MK ; étape j : _redirects, _headers, CSP générée par Astro, plan du site, robots.txt, vérification finale ; étape i : /confidentialite/ (Loi 25), /merci/, /404, tirets cadratins remplacés et garde-fou au build ; étape h.1 : quota du VIP Pass, compteur hybride Stripe/manuel, intérêt « Autre vêtement » ; étape H terminée : /a-propos/ remplace /contact/ dans le menu, avec /a-propos/contact/ et /a-propos/faq/ ; sous-navigation commune ; collection `faq`) · Lancement visé : 15 novembre 2026 (initialement le 8)*
 
 ## Décisions prises
 
@@ -29,6 +29,7 @@
 | Titres et ponctuation | Aucun tiret cadratin (—) dans le texte affiché : « · », « : » ou « \| ». Onglets : « Titre · détail \| Studio Nord » ; accueil : « Studio Nord · Son, image, histoires ». Garde-fou au build (`scripts/verifier-tirets.mjs`) |
 | Domaine | `ostudionord.ca` reste enregistré chez Namecheap, mais son DNS passe chez Cloudflare |
 | Créateurs | Section séparée `/createurs/` (BHNWTH) |
+| Index /artistes/ et /createurs/ (étape l) | Même look partout : surtitre mono + h2 (« Voix » / « Les artistes », « Production » / « Le beatmaker », « Créateur de contenu » / « Les créateurs »), puis grille d'avatars ronds (`CarteArtiste`, classe globale `.grille-av` dans `global.css`, aussi utilisée par les fiches). Sous-titre des cartes : 2 premiers genres (beatmakers compris) ou catégories. Section beatmaker : phrase « Les instrus de la maison… » sous le titre et lien « Écouter les beats → » vers `/boutique/#beats`. Carte d'un créateur : pastille « En live » (slot de `CarteArtiste`) ; pseudo, « Géré par … » et « Regarder sur … » sur la fiche seulement |
 | Dépôt de code | GitHub, migration possible vers GitLab : aucune dépendance propre à GitHub |
 | Langues | Bouton de langue (anglais, i18n d'Astro) envisagé en phase 3 |
 | Redirections | `public/_redirects` (Cloudflare Pages, 301) : anciennes URL avec et sans `.html`, `/contact` et `/contact/`, `/studio` et `/studio/`, `/archive` et `/archive/*` (règle avec joker en dernier). Cibles finissant par « / ». `www` → domaine principal : **Bulk Redirects** dans le tableau de bord Cloudflare (méthode de la documentation de Pages ; pas possible dans `_redirects`), avec un enregistrement DNS `www` proxifié |
@@ -51,7 +52,7 @@ La priorité n° 1 est d'agrandir l'auditoire. Avec Brevo, la liste peut grossir
 
 ## Stack complet par phase
 
-### Phase 1 — Lancement du 8 novembre 2026
+### Phase 1 — Lancement du 15 novembre 2026
 
 | Rôle | Outil | Coût |
 |---|---|---|
