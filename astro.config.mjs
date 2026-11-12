@@ -41,9 +41,11 @@ export default defineConfig({
         "frame-src https://www.youtube-nocookie.com",
         // Envoi des statistiques de Cloudflare Web Analytics
         "connect-src 'self' https://cloudflareinsights.com",
-        // Formspree et Brevo ; 'self' pour la redirection de Brevo vers /merci/.
+        // Formspree et Brevo. Brevo redirige ensuite vers https://ostudionord.ca/merci/ :
+        // Chrome vérifie aussi la cible de la redirection, d'où l'adresse complète du site
+        // (« 'self' » ne suffit pas en local ni sur une prévisualisation .pages.dev).
         // Stripe n'est qu'un lien : rien à déclarer.
-        "form-action 'self' https://formspree.io https://sibforms.com https://*.sibforms.com",
+        "form-action 'self' https://ostudionord.ca https://formspree.io https://sibforms.com https://*.sibforms.com",
         "upgrade-insecure-requests",
       ],
       // Scripts : les nôtres (empreintes ajoutées par Astro) + Cloudflare Web Analytics.
