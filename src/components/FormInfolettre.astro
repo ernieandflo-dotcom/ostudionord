@@ -24,11 +24,11 @@
 // dans la console de `npm run build` (rien sur la page).
 // ─────────────────────────────────────────────────────────────────────────────
 const FORMULAIRES_BREVO = {
-  infolettre: 'https://REMPLACER.sibforms.com/serve/INFOLETTRE',
-  beats: 'https://REMPLACER.sibforms.com/serve/BEATS',
+  infolettre: 'https://d2790067.sibforms.com/serve/MUIFALOwjuWqyiAfWXsyaKVHsRI0064_pCEHR5nV4_TDpGFVENDNlkVQD4ao14-TZhC2f5kwI8WkI94LHOhmHDRE2PgezhGJysBRHV53HnLKuOAAl7dksSKOKaTd0VwCB-keHQsnFnF1BHOCdeOx_c9FwedKxEQWzku1gXdjRU7NM03GrepLQ8PScxspJfw_I5UuFIVtfxz88DSdug==',
+  beats: 'https://d2790067.sibforms.com/serve/MUIFADahlWpwHpOFQz_sFoRM1vfrkc1bxsoCslnfBIscN5zmnTO9NjZZqediqDfurP0iqWn3QiofsGr-yzD1jnW0YAj8SZSjP8bLDjwYXzFE7iEyIV0D2N9lJsaE0CykOSfx0EFcFs7GQ6V_IBqEMJwUxHzIrZxyWEhB7PFsjzVIUUw7SVMAkiBHS8SrnK_yS80je0DNIXQ21bpR7w==',
   // Liste « drop » : créer aussi les attributs de contact TAILLE, COULEUR (texte)
   // et INTERETS (choix multiples), puis vérifier leurs noms dans le code HTML de Brevo.
-  drop: 'https://REMPLACER.sibforms.com/serve/DROP',
+  drop: 'https://d2790067.sibforms.com/serve/MUIFABT1Qn24cgdAj1IbyVIVNpII5tnuSNvbvvvO8hzhQbORnw1HyZs19jr15mZ0NZLR4S8jljSfWVZIr31tvwGwZtuc9hAZ4QFnfSZk0fETheNK724yYHiaMGNYz89bChc82MRExw8cpStDJ7b5QaHe0qSiAPCH899Tp6jIlQ7O9S6iNmVDgzm56IMnqKMegwWn2MCnZs8u1RsGyA==',
 } as const;
 
 type Liste = keyof typeof FORMULAIRES_BREVO;
@@ -86,6 +86,7 @@ const idForm = `form-${liste}`;
     />
   </div>
   <input type="hidden" name="locale" value="fr" />
+  <input type="hidden" name="html_type" value="simple" />
 
   <slot name="avant" />
 

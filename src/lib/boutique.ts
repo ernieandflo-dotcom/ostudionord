@@ -57,7 +57,7 @@ export const INTERETS = [
   'Autre vêtement',
   'CD',
   'Vinyle',
-  "Poster d'artiste",
+  "Poster d’artiste",
 ] as const;
 
 /**
