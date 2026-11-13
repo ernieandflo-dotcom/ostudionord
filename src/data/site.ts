@@ -43,7 +43,7 @@ export const COURRIEL = 'info@ostudionord.ca';
 // Tant que le titre contient « REMPLACER », un avertissement s'affiche au build.
 // ─────────────────────────────────────────────────────────────────────────────
 export const RESPONSABLE_RP = {
-  titre: 'REMPLACER (titre du ou de la responsable)',
+  titre: 'PDG',
   courriel: COURRIEL,
 } as const;
 
