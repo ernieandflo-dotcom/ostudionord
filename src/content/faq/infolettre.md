@@ -5,4 +5,4 @@ categorie: donnees # studio | collaborations | boutique | donnees
 ordre: 30
 ---
 
-Pour t'abonner, laisse ton courriel dans le bloc [Infolettre](/#infolettre) de l'accueil. Pour te désabonner, clique sur le lien de désabonnement au bas de n'importe quel courriel de Studio Nord : c'est immédiat.
+Pour t'abonner, laisse ton courriel dans le bloc [Infolettre](#inscription) au bas de cette page. Pour te désabonner, clique sur le lien de désabonnement au bas de n'importe quel courriel de Studio Nord : c'est immédiat.

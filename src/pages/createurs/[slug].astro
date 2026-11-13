@@ -18,6 +18,7 @@ import CarteArtiste from '../../components/CarteArtiste.astro';
 import EnTetePersonne from '../../components/EnTetePersonne.astro';
 import EncadrePartenaire from '../../components/EncadrePartenaire.astro';
 import StatutLive from '../../components/StatutLive.astro';
+import BlocInfolettre from '../../components/BlocInfolettre.astro';
 import Tuile from '../../components/Tuile.astro';
 import {
   descriptionCreateur,
@@ -184,7 +185,7 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
           <div class="vide">
             <h2 id="h-sorties">Ses contenus</h2>
             <p>Ses premiers contenus avec Studio Nord arrivent bientôt.</p>
-            <a class="lien" href="/#infolettre">
+            <a class="lien" href="#infolettre">
               M'avertir des prochaines sorties <span aria-hidden="true">→</span>
             </a>
           </div>
@@ -242,6 +243,9 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
       </section>
     )
   }
+
+  <!-- Infolettre : cible des liens « M'avertir… » de cette page -->
+  <BlocInfolettre />
 
   <nav class="retour" aria-label="Retour à la liste des créateurs">
     <div class="wrap">

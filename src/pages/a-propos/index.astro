@@ -10,6 +10,7 @@
 import { getCollection, getEntry } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import Page from '../../layouts/Page.astro';
+import BlocInfolettre from '../../components/BlocInfolettre.astro';
 import SousNav from '../../components/SousNav.astro';
 import { SITE, SOUS_NAV_A_PROPOS, COURRIEL, ADRESSE, reseauxActifs } from '../../data/site';
 import { DEGRADES, DEGRADE_PALE } from '../../lib/personnes';
@@ -212,7 +213,7 @@ const jsonLd = JSON.stringify(organisation).replace(/</g, '\\u003c');
           <p class="statut mono"><span aria-hidden="true">●</span> En pause · aucun retour annoncé</p>
           <p>
             Pendant notre transition vers la maison de création, on n’offre plus d’enregistrement,
-            de mixage ni de mastering. Si ça revient un jour, l’<a class="lien" href="/#infolettre"
+            de mixage ni de mastering. Si ça revient un jour, l’<a class="lien" href="#infolettre"
               >infolettre</a
             > sera la première au courant.
           </p>
@@ -257,6 +258,9 @@ const jsonLd = JSON.stringify(organisation).replace(/</g, '\\u003c');
       </div>
     </div>
   </section>
+
+  <!-- ═════════ INFOLETTRE (cible du lien de la section Séances) ═════════ -->
+  <BlocInfolettre />
 
   <!-- ═════════ APPEL FINAL ═════════ -->
   <section class="appel" aria-labelledby="h-appel">

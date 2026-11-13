@@ -12,6 +12,7 @@
 // comprendre la page : rien à écrire deux fois, donc on les garde.
 import { getCollection, render } from 'astro:content';
 import Page from '../../layouts/Page.astro';
+import BlocInfolettre from '../../components/BlocInfolettre.astro';
 import SousNav from '../../components/SousNav.astro';
 import { SOUS_NAV_A_PROPOS } from '../../data/site';
 import { CATEGORIES_FAQ, TITRES_CATEGORIES, parOrdre, texteBrut } from '../../lib/faq';
@@ -106,6 +107,9 @@ const jsonLd = JSON.stringify(faqLd).replace(/</g, '\\u003c');
       </div>
     </div>
   </section>
+
+  <!-- Infolettre : cible des liens des questions « reserver » et « infolettre » (id : inscription) -->
+  <BlocInfolettre ancre="inscription" />
 </Page>
 
 <style>

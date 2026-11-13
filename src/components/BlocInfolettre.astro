@@ -1,0 +1,74 @@
+---
+// Bloc « Sois averti » : encadré d'inscription à l'infolettre, à poser au bas d'une page.
+// Phase : P1 (étape k)
+//
+// Les liens « M'avertir… » des fiches, de À propos et de la FAQ pointent vers #infolettre,
+// c'est-à-dire vers ce bloc, sur la même page : le visiteur n'a plus à passer par l'accueil.
+// Aucun JavaScript ni nouveau service tiers : c'est le formulaire Brevo habituel
+// (FormInfolettre), déjà couvert par la CSP.
+// UN SEUL bloc par page : les id du formulaire (form-infolettre, courriel-infolettre)
+// doivent rester uniques. L'accueil a son propre bloc « Infolettre » (id="infolettre" aussi).
+import FormInfolettre from './FormInfolettre.astro';
+
+interface Props {
+  surtitre?: string;
+  titre?: string;
+  texte?: string;
+  bouton?: string;
+  /** id du bloc (cible des liens). Sur la FAQ : « inscription », car la question « infolettre » a déjà l'id « infolettre ». */
+  ancre?: string;
+}
+
+const {
+  surtitre = 'Prochaines sorties',
+  titre = 'Sois averti en premier',
+  texte = "Mixtape, clips, épisodes : on t'écrit quand ça sort. Une à deux fois par mois, pas plus.",
+  bouton = "M'avertir",
+  ancre = 'infolettre',
+} = Astro.props;
+---
+
+<section id={ancre} class="bloc" aria-labelledby="h-infolettre-bloc">
+  <div class="wrap">
+    <div class="box">
+      <div>
+        <span class="mono">{surtitre}</span>
+        <h2 id="h-infolettre-bloc">{titre}</h2>
+        <p>{texte}</p>
+      </div>
+      <FormInfolettre liste="infolettre" bouton={bouton} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .bloc { padding: 32px 0 40px; }
+  /* Le titre ne se cache pas sous l'en-tête collant après un clic sur #infolettre. */
+  .bloc { scroll-margin-top: 80px; }
+  .box {
+    display: grid;
+    gap: 18px;
+    padding: 26px 22px;
+    border-radius: var(--r);
+    border: 1px solid var(--ligne);
+    background: linear-gradient(120deg, var(--marine), var(--abysse));
+  }
+  @media (min-width: 900px) {
+    .box {
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 32px;
+    }
+  }
+  .box .mono { color: var(--glace); }
+  .box h2 {
+    margin: 6px 0 10px;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    line-height: 1;
+    font-variation-settings: "wdth" 82;
+  }
+  .box p {
+    margin: 0;
+    color: var(--doux);
+  }
+</style>

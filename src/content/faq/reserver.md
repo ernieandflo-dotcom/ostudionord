@@ -9,4 +9,4 @@ Pas pour l'instant. Studio Nord est en train de passer d'un studio d'enregistrem
 
 Pour enregistrer, mixer ou masteriser ton projet, on te recommande **Kota Studios**, un studio de Québec avec qui on collabore. Tu le trouveras sur la page [Partenaires](/partenaires/#kota-studios).
 
-Si les séances reviennent un jour chez nous, on l'annoncera d'abord dans l'[infolettre](/#infolettre).
+Si les séances reviennent un jour chez nous, on l'annoncera d'abord dans l'[infolettre](#inscription).

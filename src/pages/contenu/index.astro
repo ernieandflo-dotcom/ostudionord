@@ -10,7 +10,7 @@ import { getCollection } from 'astro:content';
 import Page from '../../layouts/Page.astro';
 import Tuile from '../../components/Tuile.astro';
 import Filtres from '../../components/Filtres.astro';
-import FormInfolettre from '../../components/FormInfolettre.astro';
+import BlocInfolettre from '../../components/BlocInfolettre.astro';
 import { trierSorties, typesPresents } from '../../lib/sorties';
 
 const sorties = trierSorties(await getCollection('sorties'));
@@ -38,57 +38,13 @@ const total = sorties.length;
   </section>
 
   <!-- M'avertir : cible des tuiles « à venir » de ce mur -->
-  <section id="infolettre" class="sec-avertir" aria-labelledby="h-avertir">
-    <div class="wrap">
-      <div class="box">
-        <div>
-          <span class="mono">Prochaines sorties</span>
-          <h2 id="h-avertir">Sois averti en premier</h2>
-          <p>
-            Mixtape, clips, épisodes : on t'écrit quand ça sort. Une à deux fois par mois, pas
-            plus.
-          </p>
-        </div>
-        <FormInfolettre liste="infolettre" bouton="M'avertir" />
-      </div>
-    </div>
-  </section>
+  <BlocInfolettre />
 </Page>
 
 <style>
   .sec-mur { padding-top: 20px; }
   .compte {
     margin: 0 0 14px;
-    color: var(--doux);
-  }
-
-  .sec-avertir { padding-top: 8px; }
-  /* scroll-margin : le titre ne se cache pas sous l'en-tête collant après un clic sur #infolettre */
-  #infolettre { scroll-margin-top: 80px; }
-  .box {
-    display: grid;
-    gap: 18px;
-    padding: 26px 22px;
-    border-radius: var(--r);
-    border: 1px solid var(--ligne);
-    background: linear-gradient(120deg, var(--marine), var(--abysse));
-  }
-  @media (min-width: 900px) {
-    .box {
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      padding: 32px;
-    }
-  }
-  .box .mono { color: var(--glace); }
-  .box h2 {
-    margin: 6px 0 10px;
-    font-size: clamp(1.6rem, 4vw, 2.3rem);
-    line-height: 1;
-    font-variation-settings: "wdth" 82;
-  }
-  .box p {
-    margin: 0;
     color: var(--doux);
   }
 </style>

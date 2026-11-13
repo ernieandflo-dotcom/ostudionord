@@ -17,6 +17,7 @@ import Base from '../../layouts/Base.astro';
 import CarteArtiste from '../../components/CarteArtiste.astro';
 import EnTetePersonne from '../../components/EnTetePersonne.astro';
 import EncadrePartenaire from '../../components/EncadrePartenaire.astro';
+import BlocInfolettre from '../../components/BlocInfolettre.astro';
 import Tuile from '../../components/Tuile.astro';
 import ListeBeats from '../../components/ListeBeats.astro';
 import FormInfolettre from '../../components/FormInfolettre.astro';
@@ -185,7 +186,7 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
             <div class="vide">
               <h2 id="h-sorties">Ses sorties</h2>
               <p>Ses premières sorties avec Studio Nord arrivent bientôt.</p>
-              <a class="lien" href="/#infolettre">
+              <a class="lien" href="#infolettre">
                 M'avertir des prochaines sorties <span aria-hidden="true">→</span>
               </a>
             </div>
@@ -224,6 +225,9 @@ const jsonLd = JSON.stringify(personne).replace(/</g, '\\u003c');
       </section>
     )
   }
+
+  <!-- Infolettre : cible des liens « M'avertir… » de cette page -->
+  <BlocInfolettre />
 
   <nav class="retour" aria-label="Retour à la liste des artistes">
     <div class="wrap">

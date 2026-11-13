@@ -5,20 +5,20 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
 
 ## Avant la mise en ligne
 
-- [ ] **Brevo** : remplacer les deux adresses `REMPLACER.sibforms.com` dans
-      `src/components/FormInfolettre.astro` (listes « infolettre » et « beats »),
-      vérifier les noms des champs avec le code HTML de Brevo et régler la redirection
-      vers `/merci/`. Tant que ce n'est pas fait, `npm run build` affiche
-      « À FAIRE AVANT LE LANCEMENT ».
+- [x] **Brevo** : trois formulaires en « Simple HTML » (infolettre, beats, drop), adresses dans
+      `src/components/FormInfolettre.astro`, redirection vers `/merci/` réglée dans Brevo (chaque
+      formulaire › confirmation). Test de bout en bout réussi (12 novembre).
+      Le champ à choix multiples s'envoie sous le nom `INTERETS[]` (avec les crochets) et ses
+      valeurs doivent être identiques à celles de Brevo (apostrophe courbe de « Poster d’artiste »).
 - [ ] **Vidéos** : envoyer `public/media/video/` dans R2 (`video/decompte/`, `video/tuiles/`)
       et définir `PUBLIC_MEDIA_URL=https://media.ostudionord.ca` dans Cloudflare Pages.
 - [x] **Bios des artistes et des créateurs** : remplacer le lorem ipsum sous le second `---`
       de chaque `src/content/artistes/*.md` et `src/content/createurs/*.md` (et ajouter une `accroche` au besoin). Tant que ce n'est pas
       fait, `npm run build` affiche « bio en lorem ipsum ».
-- [ ] **Formspree** : créer les formulaires « Partenariat » et « Contact », puis remplacer
+- [x] **Formspree** : créer les formulaires « Partenariat » et « Contact », puis remplacer
       `REMPLACER_PARTENARIAT` et `REMPLACER_CONTACT` dans `src/lib/formulaires.ts`
       (voir « Formulaires » plus bas).
-- [ ] **Brevo, liste « drop »** : si l'attribut `INTERETS` est à choix multiples, y ajouter
+- [x] **Brevo, liste « drop »** : si l'attribut `INTERETS` est à choix multiples, y ajouter
       la valeur « Autre vêtement » (écrite exactement pareil).
 - [ ] **VIP Pass** : choisir le mode du compteur (voir « VIP Pass : places restantes »).
       Par défaut, mode manuel (`quota: 25`, `vendus: 0`).
@@ -38,7 +38,7 @@ Source de vérité du stack et du plan : `stack_arborescence_site2.0.md` (projet
       Stripe (Payment Link du VIP Pass › après le paiement) : `https://ostudionord.ca/merci/`.
       Si la double confirmation (double opt-in) est activée dans Brevo, ajuster la phrase
       « Tu t'es abonné·e à une liste » de `src/pages/merci.astro`.
-- [ ] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
+- [x] **Partenaires** : faire valider leur description par Kota Studios, GT Média, NF Studio
       et Branche-Toi, et leur accord pour l'image de partage (mosaïque des logos).
 
 - [ ] **Cloudflare (liste de contrôle, section A)** : Bulk Redirects
